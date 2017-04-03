@@ -13,6 +13,15 @@ def countSignChanges(data):
 	for i in range(1,len(data)):
 		if data[i]*data[i-1]<0: signChanges+=1
 	return signChanges
+
+def hjorthActivity(data):
+	return np.var(data)
+
+def hjorthMobility(data):
+	return np.sqrt(np.var(np.gradient(data))/np.var(data))
+
+def hjorthComplexity(data):
+	return hjorthMobility(np.gradient(data))/hjorthMobility(data)
 				
 #Class for storing signal samples
 class SampleWindow:
@@ -169,6 +178,16 @@ class EEG:
 		(p, r1, r2, s)=np.linalg.lstsq(x, L)
 		return p[0]
 	
+	#Hjorth Parameters:
+	#Hjorth Activity
+	def hjorthActivityAt(self,i):
+		return hjorthActivity(self.getRawDataAt(i))
+	#Hjorth Mobility
+	def hjorthMobilityAt(self,i):
+		return hjorthMobility(self.getRawDataAt(i))
+	#Hjorth Complexity
+	def hjorthComplexityAt(self,i):
+		return hjorthComplexity(self.getRawDataAt(i))
 	
 #This class is for appliying diferents operations using the above class over a csv
 class CSVHelper:
