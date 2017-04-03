@@ -168,8 +168,11 @@ class EEG:
 		
 		(p, r1, r2, s)=np.linalg.lstsq(x, L)
 		return p[0]
-
+	
+	
+#This class is for appliying diferents operations using the above class over a csv
 class CSVHelper:
+	#Path is the path to the csv file
 	def __init__(self,path):
 		with open(path) as file:
 			self.data=list(map(lambda x:list(map(lambda y:float(y),x)),csv.reader(file)))
@@ -177,34 +180,42 @@ class CSVHelper:
 			self.startPoint=0
 			self.endPoint=len(self.data)
 	
+	#Returns the bandValues by iterating the file in the way defined by prepareIterator
 	def bandValues(self):
 		return [eegAux.getBandValues() for eegAux in self]
-
+	
+	#Function for iteratations
 	def __iter__(self):
 		self.auxPoint=self.startPoint
 		return self
 	
+	#Function for iterations
 	def __next__(self):
 		if self.auxPoint>=self.endPoint:
 			raise StopIteration
 		self.moveEEGWindow(self.auxPoint)
 		self.auxPoint+=self.step
 		return self.eeg
-
+	
+	#This function prepares the object to be iterated from |startPoint| to |endPoint| by skyping |step|
 	def prepareIterator(self,step=None,startPoint=0,endPoint=None):
 		if endPoint!=None:
 			self.endPoint=endPoint
 		if step!=None:
 			self.step=step
 	
+	#This function prepares the eeg object with a size of |windowSize|, having a sample rate of |sampleRate|
+	#and using the specified |windowFunction|
 	def prepareEEG(self, windowSize, sampleRate,windowFunction=None):
 		self.eeg=EEG(windowSize,sampleRate,self.electrodeNumber,windowFunction=windowFunction)
 		self.step=windowSize
 		return self.eeg
 	
+	#This moves the current window to start at |startPoint|
 	def moveEEGWindow(self, startPoint):
 		self.eeg.set(self.data[startPoint:startPoint+self.eeg.windowSize])
 		return self.eeg
-		
+	
+	#This function returns the eeg object
 	def getEEG(self):
 		return self.eeg
