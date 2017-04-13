@@ -189,6 +189,75 @@ class EEG:
 	def hjorthComplexityAt(self,i):
 		return hjorthComplexity(self.getRawDataAt(i))
 	
+
+	
+def getHij(X,i,e):
+	summ=0
+	for j in range(len(X)):
+		if np.linalg.norm(X[i]-X[j])<e: summ+=1
+	return summ
+
+def getProbabilityP(X,i,e):
+	return getHij(X,i,e)/len(X)
+
+def getEmbeddedVectors(x,m,l):
+	X=[]
+	size=len(x)
+	for i in range(size-(m-1)*l):
+		X.append(np.array(x[i:i+m*l:l]))
+	
+	return X
+	
+def getEpsilon(X,i,pRef,iterations=20):
+	eInf=0
+	eSup=None
+	e=1
+	p=1
+	minP=1/len(X)
+	for _ in range(iterations):
+		p=getProbabilityP(X,i,e)
+		if pRef<minP==p:
+			break	
+		elif e<0.0001:
+			break
+		elif p<pRef:
+			eInf=e
+		elif p>pRef:
+			eSup=e
+		else:
+			break
+		e = e*2 if eSup==None else (eInf+eSup)/2
+	return e
+	
+def synchronizationLikelihood(c1,c2,sampleRate,LF,HF,pRef=0.05):
+	l=int(sampleRate/(3*HF))
+	m=int(3*HF/LF)
+	
+	X1=getEmbeddedVectors(c1,m,l)
+	E1=[getEpsilon(X1,i,pRef) for i in range(len(X1))]
+	X2=getEmbeddedVectors(c2,m,l)
+	E2=[getEpsilon(X2,i,pRef) for i in range(len(X2))]
+	
+	size=len(X1)
+	w1=2*l*(m-1)
+	w2=size
+	SL=0
+	SLMax=0
+	for i in range(size):
+		Sij=0
+		SijMax=0
+		wSize=0
+		for j in range(size):
+			if w1<abs(j-i)<w2:
+				if np.linalg.norm(X1[i]-X1[j])<E1[i]:
+					if np.linalg.norm(X2[i]-X2[j])<E2[i]:
+						Sij+=1
+					SijMax+=1
+				wSize+=1
+		SL+=Sij/wSize
+		SLMax+=SijMax/wSize
+	return SL/SLMax
+	
 #This class is for appliying diferents operations using the above class over a csv
 class CSVHelper:
 	#Path is the path to the csv file
