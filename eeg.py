@@ -1,27 +1,10 @@
 import numpy as np
 import scipy.integrate as integrate
-import csv
 
 #Default bands ranges
 defaultBands={"delta":(1,4),"theta":(4,7), "alpha":(8,12), "beta": (12,30)}
 
-def getComponent(i,data):
-	return list(map(lambda row:row[i],data))
 
-def countSignChanges(data):
-	signChanges=0
-	for i in range(1,len(data)):
-		if data[i]*data[i-1]<0: signChanges+=1
-	return signChanges
-
-def hjorthActivity(data):
-	return np.var(data)
-
-def hjorthMobility(data):
-	return np.sqrt(np.var(np.gradient(data))/np.var(data))
-
-def hjorthComplexity(data):
-	return hjorthMobility(np.gradient(data))/hjorthMobility(data)
 				
 #Class for storing signal samples
 class SampleWindow:
@@ -139,20 +122,39 @@ class EEG:
 		return abs(self.getFourierTransformAt(i))
 	
 	#Gets the average magnitude of each band from a component i
-	def getBandValuesAt(self,i,bands=defaultBands):
+	def getAverageBandValuesAt(self,i,bands=defaultBands):
 		magnitudes=self.getMagnitudesAt(i)
 		bandsValues={}
 		for key in bands:
-			bounds=tuple(map(lambda val:int(val*self.windowSize/self.sampleRate),bands[key]))
-#			bandsValues[key]=np.mean(magnitudes[bounds[0]:bounds[1]]/self.windowSize)
-			bandsValues[key]=integrate.trapz(y = magnitudes[bounds[0]:bounds[1]]/self.windowSize,
-									 x = [v*self.sampleRate/self.windowSize for v in range(bounds[0],bounds[1])])
+			bounds=self.getBoundsForBand(bands[key])
+			bandsValues[key]=np.mean(magnitudes[bounds[0]:bounds[1]]/self.windowSize)
+#			bandsValues[key]=integrate.trapz(y = magnitudes[bounds[0]:bounds[1]]/self.windowSize,
+#									 x = [v*self.sampleRate/self.windowSize for v in range(bounds[0],bounds[1])])
 		return bandsValues
 	
-	#Gets the average magnitude of each band from all component i
-	def getBandValues(self,bands=defaultBands):
-		return [self.getBandValuesAt(i) for i in range(self.electrodeNumber)]
+	#Gets the average magnitude of each band from all components
+	def getAverageBandValues(self,bands=defaultBands):
+		return [self.getAverageBandValuesAt(i) for i in range(self.electrodeNumber)]
 	
+	def getBoundsForBand(self,bandBounds):
+		return tuple(map(lambda val:int(val*self.windowSize/self.sampleRate),bandBounds))
+	
+
+	
+	#Rebuilds the signal from a component i but only in the specified frequency bands
+	def getBandsSignalsAt(self,i,bands=defaultBands):
+		fft=self.getFourierTransformAt(i)
+		bandsSignals={}
+		for key in bands:
+			bounds=self.getBoundsForBand(bands[key])
+			bandsSignals[key]=rebuildSignalFromDFT(fft,bounds)
+			
+		return bandsSignals
+	
+	#Returns the rebuilded signals in the specified frequency bands of all the components
+	def getBandsSignals(self,bands=defaultBands):
+		return [self.getBandSignalsAt(i) for i in range(self.electrodeNumber)]
+		
 	#The Petrosian Fractal Dimension is an algorithm used to calculate the fractal dimension
 	def getPFDAt(self,i):
 		derivative=np.gradient(self.getRawDataAt(i))
@@ -189,8 +191,60 @@ class EEG:
 	def hjorthComplexityAt(self,i):
 		return hjorthComplexity(self.getRawDataAt(i))
 	
+	#Synchronization likelihood
+	def synchronizationLikelihood(self,i1,i2,bandBounds=None, pRef=0.05):
+		if bandBounds == None:
+			l=1
+			m=16
+			c1,c2=self.getRawDataAt(i1),self.getRawDataAt(i2)
+		else:
+			bounds=self.getBoundsForBand(bandBounds)
+			l=self.sampleRate//(3*bounds[1])
+			m=int(3*bounds[1]/bounds[0])
+			c1,c2= rebuildSignalFromDFT(self.getFourierTransformAt(i1),bounds), rebuildSignalFromDFT(self.getFourierTransformAt(i2),bounds)
+		l = 1 if l==0 else l
+		w1=int(2*l*(m-1))
+		w2=int(10//pRef+w1)
+		return synchronizationLikelihood(c1,c2,self.sampleRate,m,l,w1,w2,pRef)
 
+#Rebuilds a signal given the Discrete Fourier Transform having the option of giving the bounds
+def rebuildSignalFromDFT(dft,bounds=None):
+		if bounds==None: return np.fft.ifft(dft)
+		
+		auxArray=np.zeros(len(dft),dtype=complex)
+		for i in range(bounds[0],bounds[1]):
+			auxArray[i]=dft[i]
+		return np.fft.ifft(auxArray)
+
+#Synchronization Likeihood
+def synchronizationLikelihood(c1,c2,sampleRate,m,l,w1,w2,pRef=0.05):
+	X1=getEmbeddedVectors(c1,m,l)
+	E1=[getEpsilon(X1,i,pRef) for i in range(len(X1))]
+	X2=getEmbeddedVectors(c2,m,l)
+	E2=[getEpsilon(X2,i,pRef) for i in range(len(X2))]
 	
+	size=len(X1)
+	
+	SL=0
+	SLMax=0
+	for i in range(size):
+		Sij=0
+		SijMax=0
+#		wSize=0
+		for j in range(size):
+			if w1<abs(j-i)<w2:
+				if np.linalg.norm(X1[i]-X1[j])<E1[i]:
+					if np.linalg.norm(X2[i]-X2[j])<E2[i]:
+						Sij+=1
+					SijMax+=1
+#				wSize+=1
+#		SL+=0 if wSize==0 else Sij/wSize
+#		SLMax+=0 if wSize==0 else SijMax/wSize
+		SL+=Sij
+		SLMax+=SijMax
+	return SL/SLMax
+	
+#Auxiliar functions for Synchronization Likeihood	
 def getHij(X,i,e):
 	summ=0
 	for j in range(len(X)):
@@ -228,82 +282,28 @@ def getEpsilon(X,i,pRef,iterations=20):
 			break
 		e = e*2 if eSup==None else (eInf+eSup)/2
 	return e
-	
-def synchronizationLikelihood(c1,c2,sampleRate,LF,HF,pRef=0.05):
-	l=int(sampleRate/(3*HF))
-	m=int(3*HF/LF)
-	
-	X1=getEmbeddedVectors(c1,m,l)
-	E1=[getEpsilon(X1,i,pRef) for i in range(len(X1))]
-	X2=getEmbeddedVectors(c2,m,l)
-	E2=[getEpsilon(X2,i,pRef) for i in range(len(X2))]
-	
-	size=len(X1)
-	w1=2*l*(m-1)
-	w2=size
-	SL=0
-	SLMax=0
-	for i in range(size):
-		Sij=0
-		SijMax=0
-		wSize=0
-		for j in range(size):
-			if w1<abs(j-i)<w2:
-				if np.linalg.norm(X1[i]-X1[j])<E1[i]:
-					if np.linalg.norm(X2[i]-X2[j])<E2[i]:
-						Sij+=1
-					SijMax+=1
-				wSize+=1
-		SL+=Sij/wSize
-		SLMax+=SijMax/wSize
-	return SL/SLMax
-	
-#This class is for appliying diferents operations using the above class over a csv
-class CSVHelper:
-	#Path is the path to the csv file
-	def __init__(self,path):
-		with open(path) as file:
-			self.data=list(map(lambda x:list(map(lambda y:float(y),x)),csv.reader(file)))
-			self.electrodeNumber=len(self.data[0])
-			self.startPoint=0
-			self.endPoint=len(self.data)
-	
-	#Returns the bandValues by iterating the file in the way defined by prepareIterator
-	def bandValues(self):
-		return [eegAux.getBandValues() for eegAux in self]
-	
-	#Function for iteratations
-	def __iter__(self):
-		self.auxPoint=self.startPoint
-		return self
-	
-	#Function for iterations
-	def __next__(self):
-		if self.auxPoint>=self.endPoint:
-			raise StopIteration
-		self.moveEEGWindow(self.auxPoint)
-		self.auxPoint+=self.step
-		return self.eeg
-	
-	#This function prepares the object to be iterated from |startPoint| to |endPoint| by skyping |step|
-	def prepareIterator(self,step=None,startPoint=0,endPoint=None):
-		if endPoint!=None:
-			self.endPoint=endPoint
-		if step!=None:
-			self.step=step
-	
-	#This function prepares the eeg object with a size of |windowSize|, having a sample rate of |sampleRate|
-	#and using the specified |windowFunction|
-	def prepareEEG(self, windowSize, sampleRate,windowFunction=None):
-		self.eeg=EEG(windowSize,sampleRate,self.electrodeNumber,windowFunction=windowFunction)
-		self.step=windowSize
-		return self.eeg
-	
-	#This moves the current window to start at |startPoint|
-	def moveEEGWindow(self, startPoint):
-		self.eeg.set(self.data[startPoint:startPoint+self.eeg.windowSize])
-		return self.eeg
-	
-	#This function returns the eeg object
-	def getEEG(self):
-		return self.eeg
+
+#Detrented Fluctuation Analysis
+def DFA():
+	pass
+
+#Returns a list with the i component of each list contained in the list given
+def getComponent(i,data):
+	return list(map(lambda row:row[i],data))
+
+#Counts the sign changes of a data stream
+def countSignChanges(data):
+	signChanges=0
+	for i in range(1,len(data)):
+		if data[i]*data[i-1]<0: signChanges+=1
+	return signChanges
+
+#HjorthParameters
+def hjorthActivity(data):
+	return np.var(data)
+
+def hjorthMobility(data):
+	return np.sqrt(np.var(np.gradient(data))/np.var(data))
+
+def hjorthComplexity(data):
+	return hjorthMobility(np.gradient(data))/hjorthMobility(data)
