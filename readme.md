@@ -1,1 +1,1 @@
-Repository for the code of the Final Work Degree of Luis Cabañero Gómez
+eeglib is a python library that aims to be a set of tools to analyse EEG signals.
