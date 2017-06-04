@@ -1,0 +1,1051 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    
+    <title>Documentation of eeglib.eeg module &#8212; EEGlib 0.1 documentation</title>
+    
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="prev" title="Welcome to EEGlib’s documentation!" href="index.html" />
+   
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="module-eeglib.eeg">
+<span id="documentation-of-eeglib-eeg-module"></span><h1>Documentation of eeglib.eeg module<a class="headerlink" href="#module-eeglib.eeg" title="Permalink to this headline">¶</a></h1>
+<p>This module define the data structures aswell the functions for EEG analysis</p>
+<dl class="class">
+<dt id="eeglib.eeg.EEG">
+<em class="property">class </em><code class="descclassname">eeglib.eeg.</code><code class="descname">EEG</code><span class="sig-paren">(</span><em>windowSize</em>, <em>sampleRate</em>, <em>electrodeNumber</em>, <em>windowFunction=None</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.EEG" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>This class apply sginal analysis functions over the data stored in its
+attribute window.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="26%" />
+<col width="74%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>windowSize: int</td>
+<td>The maximun samples the window will store.</td>
+</tr>
+<tr class="row-even"><td>sampleRate: int</td>
+<td>The number of samples per second</td>
+</tr>
+<tr class="row-odd"><td>electrodeNumber: int</td>
+<td>The number of channels of samples the window will handle.</td>
+</tr>
+<tr class="row-even"><td>window: SampleWindow</td>
+<td>It stores the data.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#eeglib.eeg.EEG.add" title="eeglib.eeg.EEG.add"><code class="xref py py-obj docutils literal"><span class="pre">add</span></code></a>(sample)</td>
+<td>Adds a sample to the begining of the window and pops the last one and recalculates the means.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#eeglib.eeg.EEG.getAverageBandValues" title="eeglib.eeg.EEG.getAverageBandValues"><code class="xref py py-obj docutils literal"><span class="pre">getAverageBandValues</span></code></a>([bands])</td>
+<td>Returns the average magnitude of each band of every electrode.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#eeglib.eeg.EEG.getAverageBandValuesAt" title="eeglib.eeg.EEG.getAverageBandValuesAt"><code class="xref py py-obj docutils literal"><span class="pre">getAverageBandValuesAt</span></code></a>(i[,&nbsp;bands])</td>
+<td>Returns the average magnitude of each band at the given index of the</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#eeglib.eeg.EEG.getBandsSignals" title="eeglib.eeg.EEG.getBandsSignals"><code class="xref py py-obj docutils literal"><span class="pre">getBandsSignals</span></code></a>([bands])</td>
+<td>Rebuilds the signal from all componets but only in the specified frequency bands.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#eeglib.eeg.EEG.getBandsSignalsAt" title="eeglib.eeg.EEG.getBandsSignalsAt"><code class="xref py py-obj docutils literal"><span class="pre">getBandsSignalsAt</span></code></a>(i[,&nbsp;bands])</td>
+<td>Rebuilds the signal from a component i but only in the specified frequency bands.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#eeglib.eeg.EEG.getBoundsForBand" title="eeglib.eeg.EEG.getBoundsForBand"><code class="xref py py-obj docutils literal"><span class="pre">getBoundsForBand</span></code></a>(bandBounds)</td>
+<td>Returns the bounds of each band depending of the sample rate and the window size.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#eeglib.eeg.EEG.getFourierTransformAt" title="eeglib.eeg.EEG.getFourierTransformAt"><code class="xref py py-obj docutils literal"><span class="pre">getFourierTransformAt</span></code></a>(i)</td>
+<td>Returns the Discrete Fourier Transform of the data at a given index of the window.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#eeglib.eeg.EEG.getHFDAt" title="eeglib.eeg.EEG.getHFDAt"><code class="xref py py-obj docutils literal"><span class="pre">getHFDAt</span></code></a>(i[,&nbsp;kMax])</td>
+<td>Returns the Higuchi Fractal Dimension at the given index of the window.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#eeglib.eeg.EEG.getMagnitudesAt" title="eeglib.eeg.EEG.getMagnitudesAt"><code class="xref py py-obj docutils literal"><span class="pre">getMagnitudesAt</span></code></a>(i)</td>
+<td>Returns the magnitude of each complex value resulting from a Discrete Fourier Transform at a the given index of the window.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#eeglib.eeg.EEG.getNormalizedDataAt" title="eeglib.eeg.EEG.getNormalizedDataAt"><code class="xref py py-obj docutils literal"><span class="pre">getNormalizedDataAt</span></code></a>(i)</td>
+<td>Returns the data stored after being normalized at the given index of the windows.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#eeglib.eeg.EEG.getPFDAt" title="eeglib.eeg.EEG.getPFDAt"><code class="xref py py-obj docutils literal"><span class="pre">getPFDAt</span></code></a>(i)</td>
+<td>Returns the Petrosian Fractal Dimension at the given index of the window.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#eeglib.eeg.EEG.getRawDataAt" title="eeglib.eeg.EEG.getRawDataAt"><code class="xref py py-obj docutils literal"><span class="pre">getRawDataAt</span></code></a>(i)</td>
+<td>Returns the raw data stored at the given index of the windows.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#eeglib.eeg.EEG.hjorthActivityAt" title="eeglib.eeg.EEG.hjorthActivityAt"><code class="xref py py-obj docutils literal"><span class="pre">hjorthActivityAt</span></code></a>(i)</td>
+<td>Returns the Hjorth Activity at the given electrode</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#eeglib.eeg.EEG.hjorthComplexityAt" title="eeglib.eeg.EEG.hjorthComplexityAt"><code class="xref py py-obj docutils literal"><span class="pre">hjorthComplexityAt</span></code></a>(i)</td>
+<td>Returns the Hjorth Complexity at the given electrode</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#eeglib.eeg.EEG.hjorthMobilityAt" title="eeglib.eeg.EEG.hjorthMobilityAt"><code class="xref py py-obj docutils literal"><span class="pre">hjorthMobilityAt</span></code></a>(i)</td>
+<td>Returns the Hjorth Mobility at the given electrode</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#eeglib.eeg.EEG.set" title="eeglib.eeg.EEG.set"><code class="xref py py-obj docutils literal"><span class="pre">set</span></code></a>(samples[,&nbsp;columnMode])</td>
+<td>Sets multiple samples at a time into the window.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#eeglib.eeg.EEG.synchronizationLikelihood" title="eeglib.eeg.EEG.synchronizationLikelihood"><code class="xref py py-obj docutils literal"><span class="pre">synchronizationLikelihood</span></code></a>(i1,&nbsp;i2[,&nbsp;…])</td>
+<td>Returns the Synchronization Likelihood value applied over the i1 and i2 electrodes by calling <a class="reference internal" href="#eeglib.eeg.synchronizationLikelihood" title="eeglib.eeg.synchronizationLikelihood"><code class="xref py py-func docutils literal"><span class="pre">synchronizationLikelihood()</span></code></a>.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="eeglib.eeg.EEG.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>windowSize</em>, <em>sampleRate</em>, <em>electrodeNumber</em>, <em>windowFunction=None</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.EEG.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>windowSize: int</strong></p>
+<blockquote>
+<div><p>The maximun samples the window will store.</p>
+</div></blockquote>
+<p><strong>sampleRate: int</strong></p>
+<blockquote>
+<div><p>The number of samples per second</p>
+</div></blockquote>
+<p><strong>electrodeNumber: int</strong></p>
+<blockquote>
+<div><p>The number of channels of samples the window will handle.</p>
+</div></blockquote>
+<p><strong>windowFunction: String, numpy.ndarray, optional</strong></p>
+<blockquote class="last">
+<div><p>This can be a String with the name of the function (currently only
+supported <strong>“hamming”</strong>) or it can be a numpy array with a size
+equals to the window size. ThIn the first case an array with the
+size of windowSize will be created. The created array will be
+multiplied by the data in the window.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.EEG.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>sample</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.EEG.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a sample to the begining of the window and pops the last one and
+recalculates the means.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sample: array_like</strong></p>
+<blockquote class="last">
+<div><p>One sample of data</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.EEG.getAverageBandValues">
+<code class="descname">getAverageBandValues</code><span class="sig-paren">(</span><em>bands={‘theta’: (4</em>, <em>7)</em>, <em>’beta’: (12</em>, <em>30)</em>, <em>’alpha’: (8</em>, <em>12)</em>, <em>’delta’: (1</em>, <em>4)}</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.EEG.getAverageBandValues" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the average magnitude of each band of every electrode.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>bands: dict, optional</strong></p>
+<blockquote>
+<div><p>This parameter is used to indicate the bands that are going to be
+used. It is a dict with the name of each band as key and a tuple
+with the lower and upper bounds as value.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list of dict</p>
+<blockquote class="last">
+<div><p>Each dict of the list corresponds to an electrode and in each dict
+the keys are the name of each band and the values are the mean of
+the magnitudes.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.EEG.getAverageBandValuesAt">
+<code class="descname">getAverageBandValuesAt</code><span class="sig-paren">(</span><em>i</em>, <em>bands={‘theta’: (4</em>, <em>7)</em>, <em>’beta’: (12</em>, <em>30)</em>, <em>’alpha’: (8</em>, <em>12)</em>, <em>’delta’: (1</em>, <em>4)}</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.EEG.getAverageBandValuesAt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the average magnitude of each band at the given index of the
+window</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>i: int</strong></p>
+<blockquote>
+<div><p>Index of the electrode.</p>
+</div></blockquote>
+<p><strong>bands: dict, optional</strong></p>
+<blockquote>
+<div><p>This parameter is used to indicate the bands that are going to be
+used. It is a dict with the name of each band as key and a tuple
+with the lower and upper bounds as value.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict</p>
+<blockquote class="last">
+<div><p>The keys are the name of each band and the values are the mean of
+the magnitudes.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.EEG.getBandsSignals">
+<code class="descname">getBandsSignals</code><span class="sig-paren">(</span><em>bands={‘theta’: (4</em>, <em>7)</em>, <em>’beta’: (12</em>, <em>30)</em>, <em>’alpha’: (8</em>, <em>12)</em>, <em>’delta’: (1</em>, <em>4)}</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.EEG.getBandsSignals" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rebuilds the signal from all componets but only in the specified
+frequency bands.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>bands: dict, optional</strong></p>
+<blockquote>
+<div><p>This parameter is used to indicate the bands that are going to be
+used. It is a dict with the name of each band as key and a tuple
+with the lower and upper bounds as value.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list numpy.ndarray</p>
+<blockquote class="last">
+<div><p>Each element of the list contains the signal descomposed in every
+band at the corresponding index of the window.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.EEG.getBandsSignalsAt">
+<code class="descname">getBandsSignalsAt</code><span class="sig-paren">(</span><em>i</em>, <em>bands={‘theta’: (4</em>, <em>7)</em>, <em>’beta’: (12</em>, <em>30)</em>, <em>’alpha’: (8</em>, <em>12)</em>, <em>’delta’: (1</em>, <em>4)}</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.EEG.getBandsSignalsAt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Rebuilds the signal from a component i but only in the specified
+frequency bands.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>i: int</strong></p>
+<blockquote>
+<div><p>Index of the electrode.</p>
+</div></blockquote>
+<p><strong>bands: dict, optional</strong></p>
+<blockquote>
+<div><p>This parameter is used to indicate the bands that are going to be
+used. It is a dict with the name of each band as key and a tuple
+with the lower and upper bounds as value.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">numpy.ndarray</p>
+<blockquote class="last">
+<div><p>The signal descomposed in every band at the given index of the
+window.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.EEG.getBoundsForBand">
+<code class="descname">getBoundsForBand</code><span class="sig-paren">(</span><em>bandBounds</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.EEG.getBoundsForBand" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the bounds of each band depending of the sample rate and the
+window size.
+Parameters
+———-
+bandbounds: tuple</p>
+<blockquote>
+<div>A tuple containig the lower and upper bounds of a frequency band.</div></blockquote>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">tuple</p>
+<blockquote class="last">
+<div><p>A tuple containig the the new bounds of the given band.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.EEG.getFourierTransformAt">
+<code class="descname">getFourierTransformAt</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.EEG.getFourierTransformAt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Discrete Fourier Transform of the data at a given index of
+the window.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>i: int</strong></p>
+<blockquote>
+<div><p>Index of the electrode.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">numpy.ndarray</p>
+<blockquote class="last">
+<div><p>An array with the result of the Fourier Transform.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.EEG.getHFDAt">
+<code class="descname">getHFDAt</code><span class="sig-paren">(</span><em>i</em>, <em>kMax=None</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.EEG.getHFDAt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Higuchi Fractal Dimension at the given index of the window.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>i: int</strong></p>
+<blockquote>
+<div><p>Index of the electrode</p>
+</div></blockquote>
+<p><strong>kmax: int, optional</strong></p>
+<blockquote>
+<div><p>By default it will be windowSize//2.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The resulting value</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.EEG.getMagnitudesAt">
+<code class="descname">getMagnitudesAt</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.EEG.getMagnitudesAt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the magnitude of each complex value resulting from a Discrete
+Fourier Transform at a the given index of the window.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>i: int</strong></p>
+<blockquote>
+<div><p>Index of the electrode.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">numpy.ndarray</p>
+<blockquote class="last">
+<div><p>An array with the magnitudes of the Fourier Transform.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.EEG.getNormalizedDataAt">
+<code class="descname">getNormalizedDataAt</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.EEG.getNormalizedDataAt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the data stored after being normalized at the given index of the
+windows.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>i: int</strong></p>
+<blockquote>
+<div><p>Index of the electrode.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
+<blockquote class="last">
+<div><p>The list of normalized values of a specific electrode.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.EEG.getPFDAt">
+<code class="descname">getPFDAt</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.EEG.getPFDAt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Petrosian Fractal Dimension at the given index of the
+window.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>i: int</strong></p>
+<blockquote>
+<div><p>Index of the electrode</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The resulting value</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.EEG.getRawDataAt">
+<code class="descname">getRawDataAt</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.EEG.getRawDataAt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the raw data stored at the given index of the windows.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>i: int</strong></p>
+<blockquote>
+<div><p>Index of the electrode.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
+<blockquote class="last">
+<div><p>The list of values of a specific electrode.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.EEG.hjorthActivityAt">
+<code class="descname">hjorthActivityAt</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.EEG.hjorthActivityAt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Hjorth Activity at the given electrode</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>i: int</strong></p>
+<blockquote>
+<div><p>Index of the electrode</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The resulting value</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.EEG.hjorthComplexityAt">
+<code class="descname">hjorthComplexityAt</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.EEG.hjorthComplexityAt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Hjorth Complexity at the given electrode</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>i: int</strong></p>
+<blockquote>
+<div><p>Index of the electrode</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The resulting value</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.EEG.hjorthMobilityAt">
+<code class="descname">hjorthMobilityAt</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.EEG.hjorthMobilityAt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Hjorth Mobility at the given electrode</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>i: int</strong></p>
+<blockquote>
+<div><p>Index of the electrode</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The resulting value</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.EEG.set">
+<code class="descname">set</code><span class="sig-paren">(</span><em>samples</em>, <em>columnMode=False</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.EEG.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets multiple samples at a time into the window. The sample number must
+be the same as the window size.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>samples: array_like of 2 dimensions</strong></p>
+<blockquote>
+<div><p>Samples of data with a size equals to window.</p>
+</div></blockquote>
+<p><strong>columnMode: boolean, optional</strong></p>
+<blockquote class="last">
+<div><p>By default it is assummed that the shape of the data given is
+nSamples X nElectrodes. If the given data is the inverse,
+columnMode should be True.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.EEG.synchronizationLikelihood">
+<code class="descname">synchronizationLikelihood</code><span class="sig-paren">(</span><em>i1</em>, <em>i2</em>, <em>bandBounds=None</em>, <em>pRef=0.05</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.EEG.synchronizationLikelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Synchronization Likelihood value applied over the i1 and i2
+electrodes by calling <a class="reference internal" href="#eeglib.eeg.synchronizationLikelihood" title="eeglib.eeg.synchronizationLikelihood"><code class="xref py py-func docutils literal"><span class="pre">synchronizationLikelihood()</span></code></a>.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>i1: int</strong></p>
+<blockquote>
+<div><p>Index of the first electrode</p>
+</div></blockquote>
+<p><strong>i2: int</strong></p>
+<blockquote>
+<div><p>Index of the second electrode</p>
+</div></blockquote>
+<p><strong>bandBounds: tuple or list, optional</strong></p>
+<blockquote>
+<div><p>Lower and upper bounds in wich the signal will be rebuilded. If no
+bounds especified the algorithm is applied over the raw data.</p>
+</div></blockquote>
+<p><strong>pRef: float, optional</strong></p>
+<blockquote>
+<div><p>The p Ref param of the synchronizationLikelihood. Default 0.05</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The resulting value</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="eeglib.eeg.SampleWindow">
+<em class="property">class </em><code class="descclassname">eeglib.eeg.</code><code class="descname">SampleWindow</code><span class="sig-paren">(</span><em>windowSize</em>, <em>electrodeNumber</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.SampleWindow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>This class is a data structure that stores the signal data and works like a
+sliding window.</p>
+<p class="rubric">Attributes</p>
+<table border="1" class="docutils">
+<colgroup>
+<col width="21%" />
+<col width="79%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td>windowSize: int</td>
+<td>The maximun samples the window will store.</td>
+</tr>
+<tr class="row-even"><td>electrodeNumber: int</td>
+<td>The number of channels of samples the window will handle.</td>
+</tr>
+<tr class="row-odd"><td>window: list of lists</td>
+<td>It stores the data.</td>
+</tr>
+<tr class="row-even"><td>means: list</td>
+<td>It stores the means of each channels in order to use it later for normalization.</td>
+</tr>
+</tbody>
+</table>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#eeglib.eeg.SampleWindow.SampleWindowIterator" title="eeglib.eeg.SampleWindow.SampleWindowIterator"><code class="xref py py-obj docutils literal"><span class="pre">SampleWindowIterator</span></code></a>(iterWindow)</td>
+<td>This class is used as a only for iterating over the data.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#eeglib.eeg.SampleWindow.add" title="eeglib.eeg.SampleWindow.add"><code class="xref py py-obj docutils literal"><span class="pre">add</span></code></a>(sample)</td>
+<td>Adds a sample to the begining of the window and pops the last one and recalculates the means.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#eeglib.eeg.SampleWindow.getComponentAt" title="eeglib.eeg.SampleWindow.getComponentAt"><code class="xref py py-obj docutils literal"><span class="pre">getComponentAt</span></code></a>(i)</td>
+<td>Returns the list of values at a specific electrode</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#eeglib.eeg.SampleWindow.getNormalizedComponentAt" title="eeglib.eeg.SampleWindow.getNormalizedComponentAt"><code class="xref py py-obj docutils literal"><span class="pre">getNormalizedComponentAt</span></code></a>(i)</td>
+<td>Returns the list of normalized values at specific electrode.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#eeglib.eeg.SampleWindow.set" title="eeglib.eeg.SampleWindow.set"><code class="xref py py-obj docutils literal"><span class="pre">set</span></code></a>(samples[,&nbsp;columnMode])</td>
+<td>Sets multiple samples at a time.</td>
+</tr>
+</tbody>
+</table>
+<dl class="class">
+<dt id="eeglib.eeg.SampleWindow.SampleWindowIterator">
+<em class="property">class </em><code class="descname">SampleWindowIterator</code><span class="sig-paren">(</span><em>iterWindow</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.SampleWindow.SampleWindowIterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>This class is used as a only for iterating over the data. It only has a
+__init__ method and __next__ method.</p>
+<dl class="method">
+<dt id="eeglib.eeg.SampleWindow.SampleWindowIterator.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>iterWindow</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.SampleWindow.SampleWindowIterator.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>iterWindow: SampleWindow</strong></p>
+<blockquote class="last">
+<div><p>The SampleWindow object to be iterated.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.SampleWindow.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>windowSize</em>, <em>electrodeNumber</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.SampleWindow.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>Creates a SampleWindow wich stores the value of windowSize as the
+number of samples and the value of electrodeNumber as the number of
+channels.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>windowSize: int</strong></p>
+<blockquote>
+<div><p>The size of the sliding window.</p>
+</div></blockquote>
+<p><strong>electrodeNumber: int</strong></p>
+<blockquote class="last">
+<div><p>The number of electrodes recording simultaneously.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.SampleWindow.add">
+<code class="descname">add</code><span class="sig-paren">(</span><em>sample</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.SampleWindow.add" title="Permalink to this definition">¶</a></dt>
+<dd><p>Adds a sample to the begining of the window and pops the last one and
+recalculates the means.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sample: array_like</strong></p>
+<blockquote class="last">
+<div><p>One sample of data</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.SampleWindow.getComponentAt">
+<code class="descname">getComponentAt</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.SampleWindow.getComponentAt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list of values at a specific electrode</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>i: int</strong></p>
+<blockquote>
+<div><p>Index of the electrode</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
+<blockquote class="last">
+<div><p>The list of values of a specific electrode</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.SampleWindow.getNormalizedComponentAt">
+<code class="descname">getNormalizedComponentAt</code><span class="sig-paren">(</span><em>i</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.SampleWindow.getNormalizedComponentAt" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the list of normalized values at specific electrode. The
+normalization is done simply by substracting the mean of the values to
+each value.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>i: int</strong></p>
+<blockquote>
+<div><p>Index of the electrode.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">list</p>
+<blockquote class="last">
+<div><p>The list of normalized values of a specific electrode.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.eeg.SampleWindow.set">
+<code class="descname">set</code><span class="sig-paren">(</span><em>samples</em>, <em>columnMode=False</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.SampleWindow.set" title="Permalink to this definition">¶</a></dt>
+<dd><p>Sets multiple samples at a time. The sample number must be the same as
+the window size.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>samples: array_like of 2 dimensions</strong></p>
+<blockquote>
+<div><p>Samples of data with a size equals to window.</p>
+</div></blockquote>
+<p><strong>columnMode: boolean, optional</strong></p>
+<blockquote class="last">
+<div><p>By default it is assummed that the shape of the data given is
+nSamples X nElectrodes. If the given data is the inverse,
+columnMode should be True.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="function">
+<dt id="eeglib.eeg.countSignChanges">
+<code class="descclassname">eeglib.eeg.</code><code class="descname">countSignChanges</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.countSignChanges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of sign changes of a 1D array</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data: array_like</strong></p>
+<blockquote>
+<div><p>The data from which the sign changes will be counted</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">int</p>
+<blockquote class="last">
+<div><p>Number of sign changes in the data</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="data">
+<dt id="eeglib.eeg.defaultBands">
+<code class="descclassname">eeglib.eeg.</code><code class="descname">defaultBands</code><em class="property"> = {‘theta’: (4, 7), ‘beta’: (12, 30), ‘alpha’: (8, 12), ‘delta’: (1, 4)}</em><a class="headerlink" href="#eeglib.eeg.defaultBands" title="Permalink to this definition">¶</a></dt>
+<dd><p>This variable are the default frequency bands used in this library</p>
+</dd></dl>
+
+<dl class="function">
+<dt id="eeglib.eeg.getComponent">
+<code class="descclassname">eeglib.eeg.</code><code class="descname">getComponent</code><span class="sig-paren">(</span><em>i</em>, <em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.getComponent" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns a list with the i component of each list contained in the list
+given. This method assumes that data is a 2-dimensional array_like.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>i: int</strong></p>
+<blockquote>
+<div><p>The index from which the new list will be obtained</p>
+</div></blockquote>
+<p><strong>data: 2D array_like</strong></p>
+<blockquote>
+<div><p>The data from which the new list will be obtained</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">list</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="eeglib.eeg.hjorthActivity">
+<code class="descclassname">eeglib.eeg.</code><code class="descname">hjorthActivity</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.hjorthActivity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Hjorth Activity of the given data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data: array_like</strong></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The resulting value</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="eeglib.eeg.hjorthComplexity">
+<code class="descclassname">eeglib.eeg.</code><code class="descname">hjorthComplexity</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.hjorthComplexity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Hjorth Complexity of the given data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data: array_like</strong></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The resulting value</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="eeglib.eeg.hjorthMobility">
+<code class="descclassname">eeglib.eeg.</code><code class="descname">hjorthMobility</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.hjorthMobility" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Hjorth Mobility of the given data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data: array_like</strong></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The resulting value</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="eeglib.eeg.rebuildSignalFromDFT">
+<code class="descclassname">eeglib.eeg.</code><code class="descname">rebuildSignalFromDFT</code><span class="sig-paren">(</span><em>dft</em>, <em>bounds=None</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.rebuildSignalFromDFT" title="Permalink to this definition">¶</a></dt>
+<dd><p>Return a rebuilded signal given the Discrete Fourier Transform having the
+option of giving the frequency bounds.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>dft: numpy.ndarray</strong></p>
+<blockquote>
+<div><p>A Discrete Fourier Transform</p>
+</div></blockquote>
+<p><strong>bounds: tuple or list, optional</strong></p>
+<blockquote>
+<div><p>The values in index out of the specified bounds are set to 0 and later
+the IDFT is calculated.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">numpy.ndarray</p>
+<blockquote class="last">
+<div><p>The Inverse Discrete Fourier Transform of the input dft</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="eeglib.eeg.synchronizationLikelihood">
+<code class="descclassname">eeglib.eeg.</code><code class="descname">synchronizationLikelihood</code><span class="sig-paren">(</span><em>c1</em>, <em>c2</em>, <em>m</em>, <em>l</em>, <em>w1</em>, <em>w2</em>, <em>pRef=0.05</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.eeg.synchronizationLikelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Synchronization Likelihood between c1 and c2. This is a
+modified version of the algorithm.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>c1: array_like</strong></p>
+<blockquote>
+<div><p>First signal</p>
+</div></blockquote>
+<p><strong>c2: array_like</strong></p>
+<blockquote>
+<div><p>second signal</p>
+</div></blockquote>
+<p><strong>m: int</strong></p>
+<blockquote>
+<div><p>Numbers of elements of the embedded vectors.</p>
+</div></blockquote>
+<p><strong>l: int</strong></p>
+<blockquote>
+<div><p>Separation between elements of the embedded vectors.</p>
+</div></blockquote>
+<p><strong>w1: int</strong></p>
+<blockquote>
+<div><p>Theiler correction for autocorrelation effects</p>
+</div></blockquote>
+<p><strong>w2: int</strong></p>
+<blockquote>
+<div><p>A window that sharpens the time resolution of the Synchronization
+measure</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>A value between 0 and 1. 0 means that the signal are not synchronized
+at all and 1 means that they are totally synchronized.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="index.html" title="previous chapter">Welcome to EEGlib’s documentation!</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Luis Cabañero Gómez.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.2</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.7</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
