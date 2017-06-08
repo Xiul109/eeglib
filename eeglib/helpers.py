@@ -110,7 +110,7 @@ class CSVHelper(Helper):
         return self.eeg
 
     def __len__(self):
-        return len(data)
+        return len(self.data)
 
     def prepareIterator(self, step=1, startPoint=0, endPoint=None):
         "Go to :meth:`eeglib.helpers.Helper.prepareIterator`"
