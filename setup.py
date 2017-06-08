@@ -3,7 +3,7 @@
 
 from setuptools import setup, find_packages
 
-__version__ = "0.2"
+__version__ = "0.2.1"
 
 setup(name='eeglib',
       version = __version__,
@@ -16,18 +16,18 @@ setup(name='eeglib',
       license='MIT',
       classifiers=[
           'Development Status :: 4 - Beta',
-          
+
           'Intended Audience :: Developers',
           'Intended Audience :: Science/Research',
-          
+
           'License :: OSI Approved :: MIT',
-     
+
           'Programming Language :: Python :: 3',
           'Topic :: Scientific/Engineering::EEG',
       ],
       keywords='lib EEG signal analysis',
-      
+
       packages=find_packages(exclude=["docs"]),
-      
+
       install_requires = ['numpy', 'scipy']
 )

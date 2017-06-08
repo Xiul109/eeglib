@@ -23,6 +23,9 @@ class Helper(metaclass=ABCMeta):
     def __next__(self): pass
 
     @abstractclassmethod
+    def __len__(self): pass
+
+    @abstractclassmethod
     def prepareIterator(self, step=None, startPoint=0, endPoint=None):
         """
         Prepares the iterator of the helper.
@@ -93,7 +96,7 @@ class CSVHelper(Helper):
             self.startPoint = 0
             self.endPoint = len(self.data)
 
-    # Function for iteratations
+    # Function for iterations
     def __iter__(self):
         self.auxPoint = self.startPoint
         return self
@@ -105,6 +108,9 @@ class CSVHelper(Helper):
         self.moveEEGWindow(self.auxPoint)
         self.auxPoint += self.step
         return self.eeg
+
+    def __len__(self):
+        return len(data)
 
     def prepareIterator(self, step=1, startPoint=0, endPoint=None):
         "Go to :meth:`eeglib.helpers.Helper.prepareIterator`"
