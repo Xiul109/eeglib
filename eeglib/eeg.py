@@ -408,8 +408,9 @@ class EEG:
 
         Returns
         -------
-        numpy.ndarray
-            The signal descomposed in every band at the given index of the
+        dict of numpy.ndarray
+            The keys are the same keys the bands dictionary is using. The values
+            are the signal descomposed in every band at the given index of the
             window.
         """
         fft = self.getFourierTransformAt(i)
@@ -436,7 +437,8 @@ class EEG:
         -------
         list numpy.ndarray
             Each element of the list contains the signal descomposed in every
-            band at the corresponding index of the window.
+            band at the corresponding index of the window. The keys are the same
+            keys the bands dictionary is using.
         """
         return [self.getBandSignalsAt(i) for i in range(self.electrodeNumber)]
 
@@ -579,6 +581,28 @@ class EEG:
         w2 = int(10 // pRef + w1)
         return synchronizationLikelihood(c1, c2, m, l, w1, w2, pRef)
 
+    def engagementLevel(self):
+        """
+        Returns the engagament level, which is calculated with this formula:
+        beta/(alpha+theta), where alpha, beta and theta are the average of the
+        average band values between al the electrodes.
+
+        Returns
+        -------
+        float
+            The engagement level.
+        """
+        bandValues=self.getAverageBandValues()
+        alphas, betas, thetas=[],[],[]
+        for d in bandValues:
+            alphas.append(d["alpha"])
+            betas.append(d["beta"])
+            alpha.append(d["theta"])
+
+        alpha, beta, theta= np.mean(alphas), np.mean(betas), np.mean(thetas)
+
+        return beta/(alpha+theta)
+
 
 def rebuildSignalFromDFT(dft, bounds=None):
     """
@@ -655,6 +679,7 @@ def synchronizationLikelihood(c1, c2, m, l, w1, w2, pRef=0.05):
         SL += Sij
         SLMax += SijMax
     return SL / SLMax
+
 
 
 # Auxiliar functions for Synchronization Likeihood
