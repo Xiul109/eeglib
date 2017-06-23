@@ -84,9 +84,9 @@ class SampleWindow:
         """
         if hasattr(samples, "__getitem__") and hasattr(samples[0], "__getitem__"):
             if((len(samples) == self.windowSize and
-               len(samples[0]) == self.electrodeNumber and not columnMode) or
+                len(samples[0]) == self.electrodeNumber and not columnMode) or
                (len(samples) == self.electrodeNumber and
-               len(samples[0]) == self.windowSize and columnMode)):
+                    len(samples[0]) == self.windowSize and columnMode)):
                 for i in range(self.electrodeNumber):
                     if not columnMode:
                         self.window[i] = getComponent(i, samples)
@@ -139,6 +139,7 @@ class SampleWindow:
         This class is used as a only for iterating over the data. It only has a
         __init__ method and __next__ method.
         """
+
         def __init__(self, iterWindow):
             """
             Parameters
@@ -184,7 +185,8 @@ class EEG:
     window: SampleWindow
         It stores the data.
     """
-    def __init__(self, windowSize, sampleRate, electrodeNumber, windowFunction = None):
+
+    def __init__(self, windowSize, sampleRate, electrodeNumber, windowFunction=None):
         """
         Parameters
         ----------
@@ -592,16 +594,16 @@ class EEG:
         float
             The engagement level.
         """
-        bandValues=self.getAverageBandValues()
-        alphas, betas, thetas=[],[],[]
+        bandValues = self.getAverageBandValues()
+        alphas, betas, thetas = [], [], []
         for d in bandValues:
             alphas.append(d["alpha"])
             betas.append(d["beta"])
-            alpha.append(d["theta"])
+            thetas.append(d["theta"])
 
-        alpha, beta, theta= np.mean(alphas), np.mean(betas), np.mean(thetas)
+        alpha, beta, theta = np.mean(alphas), np.mean(betas), np.mean(thetas)
 
-        return beta/(alpha+theta)
+        return beta / (alpha + theta)
 
 
 def rebuildSignalFromDFT(dft, bounds=None):
@@ -679,7 +681,6 @@ def synchronizationLikelihood(c1, c2, m, l, w1, w2, pRef=0.05):
         SL += Sij
         SLMax += SijMax
     return SL / SLMax
-
 
 
 # Auxiliar functions for Synchronization Likeihood
