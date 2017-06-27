@@ -630,7 +630,7 @@ def rebuildSignalFromDFT(dft, bounds=None):
     auxArray = np.zeros(len(dft), dtype=complex)
     for i in range(bounds[0], bounds[1]):
         auxArray[i] = dft[i]
-    return np.fft.ifft(auxArray)
+    return np.fft.ifft(auxArray).real
 
 
 def synchronizationLikelihood(c1, c2, m, l, w1, w2, pRef=0.05):
