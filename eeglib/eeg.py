@@ -60,8 +60,8 @@ class SampleWindow:
         """
         if hasattr(sample, "__getitem__") and len(sample) == self.electrodeNumber:
             for i in range(self.electrodeNumber):
-                poped = self.window[i].pop()
-                self.window[i].insert(0, sample[i])
+                poped = self.window[i].pop(0)
+                self.window[i].append(sample[i])
                 self.means[i] += (sample[i] - poped) / self.windowSize
         else:
             raise ValueError(

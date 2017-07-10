@@ -114,10 +114,11 @@ class CSVHelper(Helper):
 
     def prepareIterator(self, step=1, startPoint=0, endPoint=None):
         "Go to :meth:`eeglib.helpers.Helper.prepareIterator`"
+        self.startPoint=startPoint
         if endPoint is not None:
             self.endPoint = endPoint
         if step is not None:
-            self.step = int(step)
+            self.step = float(step)
 
     def prepareEEG(self, windowSize, sampleRate, windowFunction=None):
         "Go to :meth:`eeglib.helpers.Helper.prepareEEG`"
@@ -128,7 +129,12 @@ class CSVHelper(Helper):
 
     # This moves the current window to start at |startPoint|
     def moveEEGWindow(self, startPoint):
-        self.eeg.set(self.data[startPoint:startPoint + self.eeg.windowSize])
+        startPoint=int(startPoint)
+        if startPoint+self.eeg.windowSize>len(self.data):
+            self.eeg.set(self.data[len(self.data)-self.eeg.windowSize:])
+            self.auxPoint=self.endPoint+1
+        else:
+            self.eeg.set(self.data[startPoint:startPoint + self.eeg.windowSize])
         return self.eeg
 
     def getEEG(self):
