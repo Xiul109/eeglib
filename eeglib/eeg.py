@@ -459,7 +459,7 @@ class EEG:
         float
             The resulting value
         """
-        derivative = np.gradient(self.getRawDataAt(i))
+        derivative = np.diff(self.getRawDataAt(i))
         return np.log(self.windowSize) / (np.log(self.windowSize) + np.log(self.windowSize / (self.windowSize + 0.4 * countSignChanges(derivative))))
 
     def getHFDAt(self, i, kMax=None):
@@ -483,7 +483,7 @@ class EEG:
         L, x = [], []
         N = len(X)
         kMax = N // 2 if kMax is None else kMax
-        for k in range(1, kMax + 1):
+        for k in range(2, kMax + 1):
             Lk = []
             for m in range(0, k):
                 Lmk = 0
@@ -491,7 +491,9 @@ class EEG:
                     Lmk += abs(X[m + i * k] - X[m + i * k - k])
                 Lmk = Lmk * (N - 1) / (((N - m) // k) * k)
                 Lk.append(Lmk)
-            L.append(np.log(np.mean(Lk)))
+            Laux=np.mean(Lk)
+            Laux=0.01/k if Laux==0 else Laux
+            L.append(np.log(Laux))
             x.append([np.log(1 / k), 1])
 
         (p, r1, r2, s) = np.linalg.lstsq(x, L)
