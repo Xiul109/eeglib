@@ -548,7 +548,7 @@ class EEG:
         """
         return hjorthComplexity(self.getRawDataAt(i))
 
-    def synchronizationLikelihood(self, i1, i2, bandBounds=None, pRef=0.05):
+    def synchronizationLikelihood(self, i1, i2, bandBounds=None, pRef=0.05, m=None, l=None, w1=None, w2=None):
         """
         Returns the Synchronization Likelihood value applied over the i1 and i2
         electrodes by calling :func:`~eeglib.eeg.synchronizationLikelihood`.
@@ -564,6 +564,16 @@ class EEG:
             bounds especified the algorithm is applied over the raw data.
         pRef: float, optional
             The p Ref param of the synchronizationLikelihood. Default 0.05
+        m: int
+            Numbers of elements of the embedded vectors.
+        l: int
+            Separation between elements of the embedded vectors.
+        w1: int
+            Theiler correction for autocorrelation effects
+        w2: int
+            A window that sharpens the time resolution of the Synchronization
+        measure
+            
 
         Returns
         -------
@@ -571,18 +581,24 @@ class EEG:
             The resulting value
         """
         if bandBounds is None:
-            l = 1
-            m = 16
             c1, c2 = self.getRawDataAt(i1), self.getRawDataAt(i2)
+            if l == None:
+                l=1
+            if m==None:
+                m=int(np.sqrt(self.windowSize))
         else:
             bounds = self.getBoundsForBand(bandBounds)
-            l = self.sampleRate // (3 * bounds[1])
-            m = int(3 * bounds[1] / bounds[0])
+            if l==None:
+                l = self.sampleRate // (3 * bounds[1])
+            if m==None:
+                m = int(3 * bounds[1] / bounds[0])
             c1, c2 = rebuildSignalFromDFT(self.getFourierTransformAt(
                 i1), bounds), rebuildSignalFromDFT(self.getFourierTransformAt(i2), bounds)
         l = 1 if l == 0 else l
-        w1 = int(2 * l * (m - 1))
-        w2 = int(10 // pRef + w1)
+        if w1==None:
+            w1 = int(2 * l * (m - 1))
+        if w2 == None:
+            w2 = int(10 // pRef + w1)
         return synchronizationLikelihood(c1, c2, m, l, w1, w2, pRef)
 
     def engagementLevel(self):
@@ -663,9 +679,11 @@ def synchronizationLikelihood(c1, c2, m, l, w1, w2, pRef=0.05):
         at all and 1 means that they are totally synchronized.
     """
     X1 = __getEmbeddedVectors(c1, m, l)
-    E1 = [__getEpsilon(X1, i, pRef) for i in range(len(X1))]
+    D1 = __getDistances(X1)
+    E1 = [__getEpsilon(D1, i, pRef) for i in range(len(X1))]
     X2 = __getEmbeddedVectors(c2, m, l)
-    E2 = [__getEpsilon(X2, i, pRef) for i in range(len(X2))]
+    D2 = __getDistances(X2)
+    E2 = [__getEpsilon(D2, i, pRef) for i in range(len(X2))]
 
     size = len(X1)
 
@@ -676,57 +694,72 @@ def synchronizationLikelihood(c1, c2, m, l, w1, w2, pRef=0.05):
         SijMax = 0
         for j in range(size):
             if w1 < abs(j - i) < w2:
-                if np.linalg.norm(X1[i] - X1[j]) < E1[i]:
-                    if np.linalg.norm(X2[i] - X2[j]) < E2[i]:
+                if D1[i,j] < E1[i]:
+                    if D2[i,j] < E2[i]:
                         Sij += 1
                     SijMax += 1
         SL += Sij
         SLMax += SijMax
-    return SL / SLMax
+    return SL / SLMax if SLMax>0 else 0
 
 
 # Auxiliar functions for Synchronization Likeihood
-def __getHij(X, i, e):
+def __getHij(D, i, e):
     summ = 0
-    for j in range(len(X)):
-        if np.linalg.norm(X[i] - X[j]) < e:
+    for j in range(len(D)):
+        if D[i,j] < e:
             summ += 1
     return summ
 
+def __getDistances(X):
+    t=len(X)
+    D=np.zeros((t,t),dtype=np.float)
+    for i in range(t):
+        for j in range(i):
+            D[j,i]=D[i,j]=np.linalg.norm(X[i]-X[j])
 
-def __getProbabilityP(X, i, e):
-    return __getHij(X, i, e) / len(X)
+    return D
+
+def __getProbabilityP(D, i, e):
+    return __getHij(D, i, e) / len(D)
 
 
 def __getEmbeddedVectors(x, m, l):
-    X = []
-    size = len(x)
-    for i in range(size - (m - 1) * l):
-        X.append(np.array(x[i:i + m * l:l]))
+    size = len(x)- (m - 1) * l
+    X = np.zeros((size,m))
+    for i in range(size):
+        X[i]=np.array(x[i:i + m * l:l])
 
     return X
 
 
-def __getEpsilon(X, i, pRef, iterations=20):
+def __logDiference(p1,p2):
+    return abs(np.log(p2/p1))
+
+def __getEpsilon(D, i, pRef, iterations=20):
     eInf = 0
     eSup = None
-    e = 1
-    p = 1
-    minP = 1 / len(X)
+    bestE=e = 1
+    bestP=p = 1
+    minP = 1 / len(D)
     for _ in range(iterations):
-        p = __getProbabilityP(X, i, e)
+        p = __getProbabilityP(D, i, e)
         if pRef < minP == p:
-            break
-        elif e < 0.0001:
             break
         elif p < pRef:
             eInf = e
         elif p > pRef:
             eSup = e
         else:
+            bestP=p
+            bestE=e
             break
+        if __logDiference(bestP,pRef) > __logDiference(p,pRef):
+            bestP=p
+            bestE=e
         e = e * 2 if eSup is None else (eInf + eSup) / 2
-    return e
+        
+    return bestE
 
 
 # # Detrented Fluctuation Analysis
