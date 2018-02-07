@@ -3,7 +3,7 @@
 
 from setuptools import setup, find_packages
 
-__version__ = "0.2.4"
+__version__ = "0.2.5"
 
 setup(name='eeglib',
       version = __version__,

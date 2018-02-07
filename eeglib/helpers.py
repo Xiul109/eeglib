@@ -47,7 +47,8 @@ class Helper(metaclass=ABCMeta):
     def prepareEEG(self, windowSize, sampleRate, windowFunction=None):
         """
         Prepares and creates the EEG object that the iteration will use with
-        the same parameters that an EEG objects is initialized.
+        the same parameters that an EEG objects is initialized. Also it returns
+        the inner eeg object.
 
         Parameters
         ----------
@@ -61,9 +62,29 @@ class Helper(metaclass=ABCMeta):
             equals to the window size. ThIn the first case an array with the
             size of windowSize will be created. The created array will be
             multiplied by the data in the window.
+        
+        Returns
+        -------
+        EEG
         """
         pass
 
+    @abstractclassmethod
+    def moveEEGWindow(self,startPoint):
+        """
+        Moves the window to start at startPoint. Also it returns the inner eeg
+        object.
+        
+        Parameters
+        ----------
+        startPoint: int
+        
+        Returns
+        -------
+        EEG
+        """
+        pass
+    
     @abstractclassmethod
     def getEEG(self):
         """
@@ -81,20 +102,42 @@ class CSVHelper(Helper):
     This class is for appliying diferents operations using the EEG class over a
     csv file.
     """
-    def __init__(self, path):
+    def __init__(self, path, selectedColumns=None):
         """
         Parameters
         ----------
         path: str
             The path to the csv file
+        selectedFields: list of strings or ints
+            If the data file has names asociated to each columns, those columns
+            can be selected through the name or the index of the column. If the
+            data file hasn't names in the columns, they can be selected just by
+            the index.
         """
         with open(path) as file:
-            self.data = list(
-                map(lambda x: list(map(lambda y: float(y), x)),
-                    csv.reader(file)))
-            self.electrodeNumber = len(self.data[0])
+            reader=csv.reader(file)
+            l1=reader.__next__()
+            self.data=[[] for _ in l1]
+            for row in reader:
+                for i,val in enumerate(row):
+                    self.data[i].append(float(val))
+            try:
+                l1=list(map(lambda x: float(x),l1))
+                for value,column in zip(l1,self.data):
+                    column.insert(0,value)
+                self.names=None
+            except ValueError:
+                self.names=l1
+            if selectedColumns:
+                if type(selectedColumns[0]) is str:
+                    selectedColumns=[self.names.index(x) for x in selectedColumns]
+                    self.names=[self.names[i] for i in selectedColumns]
+                self.data=[self.data[i] for i in selectedColumns]
+                
+            self.electrodeNumber = len(self.data)
+            self.nSamples = len(self.data[0])
             self.startPoint = 0
-            self.endPoint = len(self.data)
+            self.endPoint = self.nSamples
 
     # Function for iterations
     def __iter__(self):
@@ -110,7 +153,7 @@ class CSVHelper(Helper):
         return self.eeg
 
     def __len__(self):
-        return len(self.data)
+        return self.nSamples
 
     def prepareIterator(self, step=1, startPoint=0, endPoint=None):
         "Go to :meth:`eeglib.helpers.Helper.prepareIterator`"
@@ -123,18 +166,19 @@ class CSVHelper(Helper):
     def prepareEEG(self, windowSize, sampleRate, windowFunction=None):
         "Go to :meth:`eeglib.helpers.Helper.prepareEEG`"
         self.eeg = EEG(windowSize, sampleRate,
-                       self.electrodeNumber, windowFunction=windowFunction)
+                       self.electrodeNumber, windowFunction=windowFunction, names=self.names)
         self.step = windowSize
         return self.eeg
 
     # This moves the current window to start at |startPoint|
     def moveEEGWindow(self, startPoint):
+        "Go to :meth:`eeglib.helpers.Helper.moveEEGWindow`"
         startPoint=int(startPoint)
-        if startPoint+self.eeg.windowSize>len(self.data):
-            self.eeg.set(self.data[len(self.data)-self.eeg.windowSize:])
-            self.auxPoint=self.endPoint+1
+        if startPoint+self.eeg.windowSize>self.nSamples:
+            raise ValueError("The start point is too near of the end.")
         else:
-            self.eeg.set(self.data[startPoint:startPoint + self.eeg.windowSize])
+            self.eeg.set([col[startPoint:startPoint + self.eeg.windowSize] for
+                          col in self.data],columnMode=True)
         return self.eeg
 
     def getEEG(self):

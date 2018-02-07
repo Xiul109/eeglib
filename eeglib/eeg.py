@@ -29,7 +29,7 @@ class SampleWindow:
         normalization.
     """
 
-    def __init__(self, windowSize, electrodeNumber):
+    def __init__(self, windowSize, electrodeNumber,names=None):
         """
         Creates a SampleWindow wich stores the value of windowSize as the
         number of samples and the value of electrodeNumber as the number of
@@ -42,6 +42,8 @@ class SampleWindow:
 
         electrodeNumber: int
             The number of electrodes recording simultaneously.
+        names: list of strings
+            The optional names that can be used to refer to each channel.
         """
         self.windowSize = windowSize
         self.electrodeNumber = electrodeNumber
@@ -49,6 +51,11 @@ class SampleWindow:
         self.window = [[0 for i in range(windowSize)]
                        for i in range(electrodeNumber)]
         self.means = [0 for j in range(electrodeNumber)]
+        if names:
+            self.__names=names
+            self.__windowDict={n:l for (n,l) in zip(names,self.window)}
+        else:
+            self.__names=None
 
     def add(self, sample):
         """
@@ -94,6 +101,8 @@ class SampleWindow:
                         self.window[i] = getComponent(i, samples)
                     else:
                         self.window[i] = list(samples[i])
+                    if self.__names:
+                        self.__windowDict[self.__names[i]]=self.window[i]
                     self.means[i] = np.mean(self.window[i])
             else:
                 raise ValueError("the number of samples must be equal to the window size and each sample length must be a equals to electrodeNumber (" + str(
@@ -108,15 +117,23 @@ class SampleWindow:
 
         Parameters
         ----------
-        i: int
-            Index of the electrode
+        i: int or string
+            Index or name of the electrode.
 
         Returns
         -------
         list
             The list of values of a specific electrode
         """
-        return self.window[i]
+        if type(i) is int:
+            return self.window[i]
+        elif type(i) is str:
+            if self.__names:
+                return self.__windowDict[i]
+            else:
+                raise ValueError("There aren't names asociated to the channels.")
+        else:
+            raise ValueError("i only can be a integer or a string.")
 
     def getNormalizedComponentAt(self, i):
         """
@@ -126,8 +143,8 @@ class SampleWindow:
 
         Parameters
         ----------
-        i: int
-            Index of the electrode.
+        i: int or string
+            Index or name of the electrode.
 
         Returns
         -------
@@ -188,7 +205,7 @@ class EEG:
         It stores the data.
     """
 
-    def __init__(self, windowSize, sampleRate, electrodeNumber, windowFunction=None):
+    def __init__(self, windowSize, sampleRate, electrodeNumber, windowFunction=None,names=None):
         """
         Parameters
         ----------
@@ -204,11 +221,13 @@ class EEG:
             equals to the window size. ThIn the first case an array with the
             size of windowSize will be created. The created array will be
             multiplied by the data in the window.
+        names: list of strings
+            The optional names that can be used to refer to each channel.
         """
         self.windowSize = windowSize
         self.sampleRate = sampleRate
         self.electrodeNumber = electrodeNumber
-        self.window = SampleWindow(windowSize, electrodeNumber)
+        self.window = SampleWindow(windowSize, electrodeNumber,names=names)
         self.__handleWindowFunction(windowFunction, windowSize)
 
     # Function to handle the windowFunction parameter
@@ -265,8 +284,8 @@ class EEG:
 
         Parameters
         ----------
-        i: int
-            Index of the electrode.
+        i: int or string
+            Index or name of the electrode.
 
         Returns
         -------
@@ -283,8 +302,8 @@ class EEG:
 
         Parameters
         ----------
-        i: int
-            Index of the electrode.
+        i: int or string
+            Index or name of the electrode.
 
         Returns
         -------
@@ -300,8 +319,8 @@ class EEG:
 
         Parameters
         ----------
-        i: int
-            Index of the electrode.
+        i: int or string
+            Index or name of the electrode.
 
         Returns
         -------
@@ -319,8 +338,8 @@ class EEG:
 
         Parameters
         ----------
-        i: int
-            Index of the electrode.
+        i: int or string
+            Index or name of the electrode.
 
         Returns
         -------
@@ -336,8 +355,8 @@ class EEG:
 
         Parameters
         ----------
-        i: int
-            Index of the electrode.
+        i: int or string
+            Index or name of the electrode.
 
         bands: dict, optional
             This parameter is used to indicate the bands that are going to be
@@ -383,6 +402,7 @@ class EEG:
         """
         Returns the bounds of each band depending of the sample rate and the
         window size.
+        
         Parameters
         ----------
         bandbounds: tuple
@@ -402,8 +422,8 @@ class EEG:
 
         Parameters
         ----------
-        i: int
-            Index of the electrode.
+        i: int or string
+            Index or name of the electrode.
 
         bands: dict, optional
             This parameter is used to indicate the bands that are going to be
@@ -453,8 +473,8 @@ class EEG:
 
         Parameters
         ----------
-        i: int
-            Index of the electrode
+        i: int or string
+            Index or name of the electrode.
 
         Returns
         -------
@@ -468,8 +488,8 @@ class EEG:
 
         Parameters
         ----------
-        i: int
-            Index of the electrode
+        i: int or string
+            Index or name of the electrode.
 
         kmax: int, optional
             By default it will be windowSize//2.
@@ -488,8 +508,8 @@ class EEG:
 
         Parameters
         ----------
-        i: int
-            Index of the electrode
+        i: int or string
+            Index or name of the electrode.
 
         Returns
         -------
@@ -504,8 +524,8 @@ class EEG:
 
         Parameters
         ----------
-        i: int
-            Index of the electrode
+        i: int or string
+            Index or name of the electrode.
 
         Returns
         -------
@@ -520,8 +540,8 @@ class EEG:
 
         Parameters
         ----------
-        i: int
-            Index of the electrode
+        i: int or string
+            Index or name of the electrode.
 
         Returns
         -------
@@ -537,10 +557,10 @@ class EEG:
 
         Parameters
         ----------
-        i1: int
-            Index of the first electrode
-        i2: int
-            Index of the second electrode
+        i1: int or string
+            Index or name of the first electrode.
+        i2: int or string
+            Index or name of the second electrode.
         bandBounds: tuple or list, optional
             Lower and upper bounds in wich the signal will be rebuilded. If no
             bounds especified the algorithm is applied over the raw data.
@@ -720,8 +740,7 @@ def synchronizationLikelihood(c1, c2, m, l, w1, w2, pRef=0.05, epsilonIterations
     return __SL(c1, c2, m, l, w1, w2, pRef,epsilonIterations)
 
 # Auxiliar functions for Synchronization Likeihood
-@jit([float64(int64[:],int64[:],int64,int64,int64,int64,float64,int64),
-      float64(float64[:],float64[:],int64,int64,int64,int64,float64,int64)])
+@jit(float64(float64[:],float64[:],int64,int64,int64,int64,float64,int64))
 def __SL(c1, c2, m, l, w1, w2, pRef, epsilonIterations):
     X1 = __getEmbeddedVectors(c1, m, l)
     X2 = __getEmbeddedVectors(c2, m, l)
@@ -759,7 +778,7 @@ def __getHij(D, i, e):
             summ += 1
     return summ
 
-@jit(float64[:,:](int64[:,:]))
+@jit(float64[:,:](float64[:,:]))
 def __getDistances(X):
     t=len(X)
     D=np.zeros((t,t),dtype=np.float)
@@ -772,7 +791,7 @@ def __getDistances(X):
 def __getProbabilityP(D, i, e):
     return __getHij(D, i, e) /len(D) 
 
-@jit(int64[:,:](int64[:],int64,int64))
+@jit(int64[:,:](float64[:],int64,int64))
 def __getEmbeddedVectors(x, m, l):
     size = len(x)- (m - 1) * l
     X = np.zeros((size,m))
