@@ -129,9 +129,10 @@ class CSVHelper(Helper):
             except ValueError:
                 self.names=l1
             if selectedColumns:
-                if type(selectedColumns[0]) is str:
-                    selectedColumns=[self.names.index(x) for x in selectedColumns]
-                    self.names=[self.names[i] for i in selectedColumns]
+                for i,column in enumerate(selectedColumns):
+                    if type(selectedColumns[i]) is str:
+                        selectedColumns[i]=self.names.index(column)
+                self.names=[self.names[i] for i in selectedColumns]
                 self.data=[self.data[i] for i in selectedColumns]
                 
             self.electrodeNumber = len(self.data)
