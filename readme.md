@@ -4,7 +4,7 @@ The module eeglib is a library for python 3.4+ that aims to be a set of tools to
 
 This library was initialy a Final Degree Project and you can find the documentation of the development in the next link:
 
-[Documentation (Spanish)] (https://ruidera.uclm.es/xmlui/handle/10578/15441)
+[Documentation (Spanish)](https://ruidera.uclm.es/xmlui/handle/10578/15441)
 
 ## Main features
 * Different types of processings
