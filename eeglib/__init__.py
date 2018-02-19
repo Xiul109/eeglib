@@ -8,3 +8,5 @@ This module is a library with some tools and functions for EEG signal analysis.
 
 from . import eeg
 from . import helpers
+from . import features
+from . import preprocessing

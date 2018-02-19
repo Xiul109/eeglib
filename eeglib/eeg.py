@@ -1,9 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"This module define the data structures aswell the functions for EEG analysis"
+"This module define the data structures that are used in this library"
 
 import numpy as np
-from numba import jit, float64,int64
+
+from eeglib.features import (HFD,PFD, averageBandValues,hjorthActivity,
+                             hjorthMobility, hjorthComplexity,
+                             synchronizationLikelihood)
+from eeglib.preprocessing import bandPassFilter
 
 # Default bands ranges
 defaultBands = {"delta": (1, 4), "theta": (4, 7),
@@ -20,19 +24,16 @@ class SampleWindow:
     ----------
     windowSize: int
         The maximun samples the window will store.
-    electrodeNumber: int
+    channelNumber: int
         The number of channels of samples the window will handle.
     window: list of lists
         It stores the data.
-    means: list
-        It stores the means of each channels in order to use it later for
-        normalization.
     """
 
-    def __init__(self, windowSize, electrodeNumber,names=None):
+    def __init__(self, windowSize, channelNumber,names=None):
         """
         Creates a SampleWindow wich stores the value of windowSize as the
-        number of samples and the value of electrodeNumber as the number of
+        number of samples and the value of channelNumber as the number of
         channels.
 
         Parameters
@@ -40,42 +41,22 @@ class SampleWindow:
         windowSize: int
             The size of the sliding window.
 
-        electrodeNumber: int
-            The number of electrodes recording simultaneously.
-        names: list of strings
+        channelNumber: int
+            The number of channels recording simultaneously.
+        names: list of strings, optional
             The optional names that can be used to refer to each channel.
         """
         self.windowSize = windowSize
-        self.electrodeNumber = electrodeNumber
+        self.channelNumber = channelNumber
 
-        self.window = [[0 for i in range(windowSize)]
-                       for i in range(electrodeNumber)]
-        self.means = [0 for j in range(electrodeNumber)]
+        self.window = np.zeros((channelNumber,windowSize))
         if names:
             self.__names=names
             self.__windowDict={n:l for (n,l) in zip(names,self.window)}
         else:
             self.__names=None
 
-    def add(self, sample):
-        """
-        Adds a sample to the begining of the window and pops the last one and
-        recalculates the means.
-
-        Parameters
-        ----------
-        sample: array_like
-            One sample of data
-        """
-        if hasattr(sample, "__getitem__") and len(sample) == self.electrodeNumber:
-            for i in range(self.electrodeNumber):
-                poped = self.window[i].pop(0)
-                self.window[i].append(sample[i])
-                self.means[i] += (sample[i] - poped) / self.windowSize
-        else:
-            raise ValueError(
-                "sample must be a subscriptable object with a length equals to electrodeNumber (" + str(self.electrodeNumber) + ")")
-
+    
     def set(self, samples, columnMode=False):
         """
         Sets multiple samples at a time. The sample number must be the same as
@@ -88,77 +69,78 @@ class SampleWindow:
 
         columnMode: boolean, optional
             By default it is assummed that the shape of the data given is
-            nSamples X nElectrodes. If the given data is the inverse,
+            nSamples X nchannels. If the given data is the inverse,
             columnMode should be True.
         """
         if hasattr(samples, "__getitem__") and hasattr(samples[0], "__getitem__"):
             if((len(samples) == self.windowSize and
-                len(samples[0]) == self.electrodeNumber and not columnMode) or
-               (len(samples) == self.electrodeNumber and
-                    len(samples[0]) == self.windowSize and columnMode)):
-                for i in range(self.electrodeNumber):
-                    if not columnMode:
-                        self.window[i] = getComponent(i, samples)
-                    else:
-                        self.window[i] = list(samples[i])
-                    if self.__names:
+                len(samples[0]) == self.channelNumber and not columnMode) 
+                or (len(samples) == self.channelNumber and
+                len(samples[0]) == self.windowSize and columnMode)):
+                if not columnMode:
+                    self.window = np.transpose(np.array(samples))
+                else:
+                    self.window = np.array(samples)
+                if self.__names:
+                    for i in range(self.channelNumber):
                         self.__windowDict[self.__names[i]]=self.window[i]
-                    self.means[i] = np.mean(self.window[i])
             else:
-                raise ValueError("the number of samples must be equal to the window size and each sample length must be a equals to electrodeNumber (" + str(
-                    self.electrodeNumber) + ") if not in columnMode and viceversa if in columnMode")
+                raise ValueError(("the number of samples must be equal to the "
+                                 + "window size and each sample length must be"
+                                 +" a equals to channelNumber ( {0} ) if not"
+                                 +"in columnMode and viceversa if in"+
+                                 "columnMode").format(self.channelNumber))
         else:
-            raise ValueError(
-                "samples must be a subscriptable object wich contains subcriptable objects")
+            raise ValueError("samples must be a subscriptable object wich"+
+                             "contains subcriptable objects")
 
-    def getComponentAt(self, i):
+    def getChannel(self, i=None):
         """
-        Returns the list of values at a specific electrode
+        Returns an array containing the data of the the selected channel/s.
 
         Parameters
         ----------
-        i: int or string
-            Index or name of the electrode.
+        i: Variable type, optional
+            * int:  the index of the channel.
+            * str:  the name of the channel.
+            * list of strings and integers:  a list of channels that will be
+              returned as a 2D ndarray.
+            * slice:  a slice selecting the range of channels that wll be
+              returned as a 2D ndarray.
+            * None: all the data returned as a 2D ndarray
 
         Returns
         -------
-        list
-            The list of values of a specific electrode
+        numpy.ndarray
+            Can be a one or a two dimension matrix, depending of the parameters.
         """
-        if type(i) is int:
-            return self.window[i]
+        if i is None:
+            return self.window
         elif type(i) is str:
             if self.__names:
                 return self.__windowDict[i]
             else:
                 raise ValueError("There aren't names asociated to the channels.")
+        elif type(i) is list:
+            selectedChannels=np.zeros((len(i),256),dtype=np.float)
+            for c,e in enumerate(i):
+                if type(e) in [int,str]:
+                    selectedChannels[c]=self.getChannel(e)
+                else:
+                    ValueError("The list can only contain int or strings.")
+            return selectedChannels
+        elif type(i) in [int,slice]:
+            return self.window[i]
         else:
-            raise ValueError("i only can be a integer or a string.")
-
-    def getNormalizedComponentAt(self, i):
-        """
-        Returns the list of normalized values at specific electrode. The
-        normalization is done simply by substracting the mean of the values to
-        each value.
-
-        Parameters
-        ----------
-        i: int or string
-            Index or name of the electrode.
-
-        Returns
-        -------
-        list
-            The list of normalized values of a specific electrode.
-        """
-        return list(map(lambda x: x - self.means[i], self.getComponentAt(i)))
+            raise ValueError("This methods only accepts int, str, list or" +
+                             "slice types and not %s"%type(i))
 
     class SampleWindowIterator:
         """
         This class is used as a only for iterating over the data. It only has a
         __init__ method and __next__ method.
         """
-
+        
         def __init__(self, iterWindow):
             """
             Parameters
@@ -181,7 +163,7 @@ class SampleWindow:
         return self.SampleWindowIterator(self)
 
     def __getitem__(self, n):
-        return [win[n] for win in self.window]
+        return self.window[:,n]
 
     # Returns a string representation of the inner list
     def __str__(self):
@@ -199,13 +181,13 @@ class EEG:
         The maximun samples the window will store.
     sampleRate: int
         The number of samples per second
-    electrodeNumber: int
+    channelNumber: int
         The number of channels of samples the window will handle.
     window: SampleWindow
         It stores the data.
     """
 
-    def __init__(self, windowSize, sampleRate, electrodeNumber, windowFunction=None,names=None):
+    def __init__(self, windowSize, sampleRate, channelNumber, windowFunction=None,names=None):
         """
         Parameters
         ----------
@@ -213,21 +195,21 @@ class EEG:
             The maximun samples the window will store.
         sampleRate: int
             The number of samples per second
-        electrodeNumber: int
+        channelNumber: int
             The number of channels of samples the window will handle.
-        windowFunction: String, numpy.ndarray, optional
+        windowFunction: String or numpy.ndarray, optional
             This can be a String with the name of the function (currently only
             supported **"hamming"**) or it can be a numpy array with a size
             equals to the window size. ThIn the first case an array with the
             size of windowSize will be created. The created array will be
-            multiplied by the data in the window.
-        names: list of strings
+            multiplied by the data in the window whenever FFT is used.
+        names: list of strings, optional
             The optional names that can be used to refer to each channel.
         """
         self.windowSize = windowSize
         self.sampleRate = sampleRate
-        self.electrodeNumber = electrodeNumber
-        self.window = SampleWindow(windowSize, electrodeNumber,names=names)
+        self.channelNumber = channelNumber
+        self.window = SampleWindow(windowSize, channelNumber,names=names)
         self.__handleWindowFunction(windowFunction, windowSize)
 
     # Function to handle the windowFunction parameter
@@ -261,102 +243,105 @@ class EEG:
 
         columnMode: boolean, optional
             By default it is assummed that the shape of the data given is
-            nSamples X nElectrodes. If the given data is the inverse,
+            nSamples X nchannels. If the given data is the inverse,
             columnMode should be True.
         """
         self.window.set(samples, columnMode)
 
-    def add(self, sample):
-        """
-        Adds a sample to the begining of the window and pops the last one and
-        recalculates the means.
-
-        Parameters
-        ----------
-        sample: array_like
-            One sample of data
-        """
-        self.window.add(sample)
-
-    def getRawDataAt(self, i):
+    def getChannel(self, i=None):
         """
         Returns the raw data stored at the given index of the windows.
 
         Parameters
         ----------
-        i: int or string
-            Index or name of the electrode.
+        i: Variable type, optional
+            * int:  the index of the channel.
+            * str:  the name of the channel.
+            * list of strings and integers:  a list of channels that will be
+              returned as a 2D ndarray.
+            * slice:  a slice selecting the range of channels that wll be
+              returned as a 2D ndarray.
+            * None: all the data returned as a 2D ndarray
 
         Returns
         -------
         list
-            The list of values of a specific electrode.
+            The list of values of a specific channel.
         """
-        return self.window.getComponentAt(i)
+        return self.window.getChannel(i)
+    
+    def __applyFunctionTo(self,function,i=None):
+        data=self.window.getChannel(i)
+        if len(np.shape(data))==1:
+            return function(data)
+        else:
+            return np.array([function(d) for d in data])
 
-    # Gets the normalized data values of the component i
-    def getNormalizedDataAt(self, i):
-        """
-        Returns the data stored after being normalized at the given index of the
-        windows.
-
-        Parameters
-        ----------
-        i: int or string
-            Index or name of the electrode.
-
-        Returns
-        -------
-        list
-            The list of normalized values of a specific electrode.
-        """
-        return self.window.getNormalizedComponentAt(i)
-
-    def getFourierTransformAt(self, i):
+    def getFourierTransform(self, i=None):
         """
         Returns the Discrete Fourier Transform of the data at a given index of
         the window.
 
         Parameters
         ----------
-        i: int or string
-            Index or name of the electrode.
+        i: Variable type, optional
+            * int:  the index of the channel.
+            * str:  the name of the channel.
+            * list of strings and integers:  a list of channels that will be
+              used.
+            * slice: a slice selecting the range of channels that will be
+              used.
+            * None: all the channels will be used
 
         Returns
         -------
         numpy.ndarray
-            An array with the result of the Fourier Transform.
+            An array with the result of the Fourier Transform. If more than one
+            channel was selected the array will be of 2 Dimensions.
         """
-        return np.fft.fft(self.windowFunction * self.window.getNormalizedComponentAt(i))
+        return self.__applyFunctionTo(np.fft.fft, i)
 
     # Gets the magnitude of each complex value resulting from a Fourier
     # Transform from a component i
-    def getMagnitudesAt(self, i):
+    def getMagnitudes(self, i=None):
         """
         Returns the magnitude of each complex value resulting from a Discrete
         Fourier Transform at a the given index of the window.
 
         Parameters
         ----------
-        i: int or string
-            Index or name of the electrode.
+        i: Variable type, optional
+            * int:  the index of the channel.
+            * str:  the name of the channel.
+            * list of strings and integers:  a list of channels that will be
+              used.
+            * slice: a slice selecting the range of channels that will be
+              used.
+            * None: all the channels will be used
 
         Returns
         -------
         numpy.ndarray
-            An array with the magnitudes of the Fourier Transform.
+            An array with the magnitudes of the Fourier Transform. If more than one
+            channel was selected the array will be of 2 Dimensions.
         """
-        return abs(self.getFourierTransformAt(i))
+        return abs(self.getFourierTransform(i))
 
-    def getAverageBandValuesAt(self, i, bands=defaultBands):
+    def getAverageBandValues(self, i=None, bands=defaultBands):
         """
         Returns the average magnitude of each band at the given index of the
         window
 
         Parameters
         ----------
-        i: int or string
-            Index or name of the electrode.
+        i: Variable type, optional
+            * int:  the index of the channel.
+            * str:  the name of the channel.
+            * list of strings and integers:  a list of channels that will be
+              used.
+            * slice: a slice selecting the range of channels that will be
+              used.
+            * None: all the channels will be used
 
         bands: dict, optional
             This parameter is used to indicate the bands that are going to be
@@ -365,38 +350,20 @@ class EEG:
 
         Returns
         -------
-        dict
+        dict or list of dict
             The keys are the name of each band and the values are the mean of
-            the magnitudes.
+            the magnitudes. If more than one channel was selected the return
+            object will be a list containing the dict for each channel selected
         """
-        magnitudes = self.getMagnitudesAt(i)
-        bandsValues = {}
-        for key in bands:
-            bounds = self.getBoundsForBand(bands[key])
-            bandsValues[key] = np.mean(
-                magnitudes[bounds[0]:bounds[1]] / self.windowSize)
-
-        return bandsValues
-
-    def getAverageBandValues(self, bands=defaultBands):
-        """
-        Returns the average magnitude of each band of every electrode.
-
-        Parameters
-        ----------
-        bands: dict, optional
-            This parameter is used to indicate the bands that are going to be
-            used. It is a dict with the name of each band as key and a tuple
-            with the lower and upper bounds as value.
-
-        Returns
-        -------
-        list of dict
-            Each dict of the list corresponds to an electrode and in each dict
-            the keys are the name of each band and the values are the mean of
-            the magnitudes.
-        """
-        return [self.getAverageBandValuesAt(i) for i in range(self.electrodeNumber)]
+        magnitudes = self.getMagnitudes(i)
+        bands={key:self.getBoundsForBand(b) for key,b in bands.items()}
+        if magnitudes.ndim==1:
+            return averageBandValues(magnitudes,bands)
+        else:
+            averagedValues=[]
+            for c in magnitudes:
+                averagedValues.append(averageBandValues(c,bands))
+            return averagedValues
 
     def getBoundsForBand(self, bandBounds):
         """
@@ -413,17 +380,24 @@ class EEG:
         tuple
             A tuple containig the the new bounds of the given band.
         """
-        return tuple(map(lambda val: int(val * self.windowSize / self.sampleRate), bandBounds))
+        return tuple(map(lambda val: 
+            int(val * self.windowSize / self.sampleRate), bandBounds))
 
-    def getBandsSignalsAt(self, i, bands=defaultBands):
+    def getSignalAtBands(self, i=None, bands=defaultBands):
         """
         Rebuilds the signal from a component i but only in the specified
         frequency bands.
 
         Parameters
         ----------
-        i: int or string
-            Index or name of the electrode.
+        i: Variable type, optional
+            * int:  the index of the channel.
+            * str:  the name of the channel.
+            * list of strings and integers:  a list of channels that will be
+              used.
+            * slice: a slice selecting the range of channels that will be
+              used.
+            * None: all the channels will be used
 
         bands: dict, optional
             This parameter is used to indicate the bands that are going to be
@@ -432,182 +406,185 @@ class EEG:
 
         Returns
         -------
-        dict of numpy.ndarray
-            The keys are the same keys the bands dictionary is using. The values
-            are the signal descomposed in every band at the given index of the
-            window.
+        dict of numpy.ndarray (1D or 2D)
+            The keys are the same keys the bands dictionary is using. The 
+            values are the signal filtered in every band at the given index of 
+            the window. If more than one channel is selected the return object
+            will be a dict containing 2D arrays in which each row is a signal
+            filtered at the corresponding channel.
         """
-        fft = self.getFourierTransformAt(i)
+        
         bandsSignals = {}
-        for key in bands:
+        for key,data in bands.items():
             bounds = self.getBoundsForBand(bands[key])
-            bandsSignals[key] = rebuildSignalFromDFT(fft, bounds)
+            bandsSignals[key]=self.__applyFunctionTo(lambda x: 
+                bandPassFilter(x,self.sampleRate,bounds[0],bounds[1]),i)
 
         return bandsSignals
 
-    def getBandsSignals(self, bands=defaultBands):
-        """
-        Rebuilds the signal from all componets but only in the specified
-        frequency bands.
-
-        Parameters
-        ----------
-        bands: dict, optional
-            This parameter is used to indicate the bands that are going to be
-            used. It is a dict with the name of each band as key and a tuple
-            with the lower and upper bounds as value.
-
-        Returns
-        -------
-        list numpy.ndarray
-            Each element of the list contains the signal descomposed in every
-            band at the corresponding index of the window. The keys are the same
-            keys the bands dictionary is using.
-        """
-        return [self.getBandSignalsAt(i) for i in range(self.electrodeNumber)]
-
-    def getPFDAt(self, i):
+    def PFD(self, i=None):
         """
         Returns the Petrosian Fractal Dimension at the given index of the
         window.
 
         Parameters
         ----------
-        i: int or string
-            Index or name of the electrode.
+        i: Variable type, optional
+            * int:  the index of the channel.
+            * str:  the name of the channel.
+            * list of strings and integers:  a list of channels that will be
+              used.
+            * slice: a slice selecting the range of channels that will be
+              used.
+            * None: all the channels will be 
 
         Returns
         -------
-        float
-            The resulting value
+        float or array
+            The resulting value. If more than one channe was selected the
+            return object will be a 1D array containing the result of the
+            procesing.
         """
-        return PFD(self.getRawDataAt(i))
-    def getHFDAt(self, i, kMax=None):
+        return self.__applyFunctionTo(PFD,i)
+    def HFD(self, i, kMax=None):
         """
         Returns the Higuchi Fractal Dimension at the given index of the window.
 
         Parameters
         ----------
-        i: int or string
-            Index or name of the electrode.
-
+        i: Variable type, optional
+            * int:  the index of the channel.
+            * str:  the name of the channel.
+            * list of strings and integers:  a list of channels that will be
+              used.
+            * slice: a slice selecting the range of channels that will be
+              used.
+            * None: all the channels will be 
         kmax: int, optional
             By default it will be windowSize//2.
 
         Returns
         -------
-        float
-            The resulting value
+        float or array
+            The resulting value. If more than one channe was selected the
+            return object will be a 1D array containing the result of the
+            procesing.
         """
-        return HFD(self.getRawDataAt(i),kMax)
+        return self.__applyFunctionTo(lambda v:HFD(v,kMax),i)
 
     # Hjorth Parameters:
-    def hjorthActivityAt(self, i):
+    def hjorthActivity(self, i=None):
         """
-        Returns the Hjorth Activity at the given electrode
+        Returns the Hjorth Activity at the given channel
 
         Parameters
         ----------
-        i: int or string
-            Index or name of the electrode.
+        i: int or string, optional
+            Index or name of the channel.
 
         Returns
         -------
         float
             The resulting value
         """
-        return hjorthActivity(self.getRawDataAt(i))
+        return self.__applyFunctionTo(hjorthActivity,i)
 
-    def hjorthMobilityAt(self, i):
+    def hjorthMobility(self, i=None):
         """
-        Returns the Hjorth Mobility at the given electrode
+        Returns the Hjorth Mobility at the given channel
 
         Parameters
         ----------
-        i: int or string
-            Index or name of the electrode.
+        i: Variable type, optional
+            * int:  the index of the channel.
+            * str:  the name of the channel.
+            * list of strings and integers:  a list of channels that will be
+              used.
+            * slice: a slice selecting the range of channels that will be
+              used.
+            * None: all the channels will be 
 
         Returns
         -------
-        float
-            The resulting value
+        float or array
+            The resulting value. If more than one channe was selected the
+            return object will be a 1D array containing the result of the
+            procesing.
         """
-        return hjorthMobility(self.getRawDataAt(i))
+        return self.__applyFunctionTo(hjorthMobility,i)
 
-    def hjorthComplexityAt(self, i):
+    def hjorthComplexity(self, i=None):
         """
-        Returns the Hjorth Complexity at the given electrode
+        Returns the Hjorth Complexity at the given channel
 
         Parameters
         ----------
-        i: int or string
-            Index or name of the electrode.
+        i: Variable type, optional
+            * int:  the index of the channel.
+            * str:  the name of the channel.
+            * list of strings and integers:  a list of channels that will be
+              used.
+            * slice: a slice selecting the range of channels that will be
+              used.
+            * None: all the channels will be 
 
         Returns
         -------
-        float
-            The resulting value
+        float or array
+            The resulting value. If more than one channe was selected the
+            return object will be a 1D array containing the result of the
+            procesing.
         """
-        return hjorthComplexity(self.getRawDataAt(i))
+        return self.__applyFunctionTo(hjorthComplexity,i)
 
-    def synchronizationLikelihood(self, i1, i2, bandBounds=None, pRef=0.05, m=None, l=None, w1=None, w2=None):
+    def synchronizationLikelihood(self, i1, i2, m=None, l=None,
+                                  w1=None, w2=None, pRef=0.05,**kargs):
         """
         Returns the Synchronization Likelihood value applied over the i1 and i2
-        electrodes by calling :func:`~eeglib.eeg.synchronizationLikelihood`.
+        channels by calling :func:`~eeglib.eeg.synchronizationLikelihood`.
 
         Parameters
         ----------
         i1: int or string
-            Index or name of the first electrode.
+            Index or name of the first channel.
         i2: int or string
-            Index or name of the second electrode.
-        bandBounds: tuple or list, optional
-            Lower and upper bounds in wich the signal will be rebuilded. If no
-            bounds especified the algorithm is applied over the raw data.
+            Index or name of the second channel.
+        m: int, optional
+            Numbers of elements of the embedded vectors.
+        l: int, optional
+            Separation between elements of the embedded vectors.
+        w1: int, optional
+            Theiler correction for autocorrelation effects
+        w2: int, optional
+            A window that sharpens the time resolution of the Synchronization
+            measure
         pRef: float, optional
             The p Ref param of the synchronizationLikelihood. Default 0.05
-        m: int
-            Numbers of elements of the embedded vectors.
-        l: int
-            Separation between elements of the embedded vectors.
-        w1: int
-            Theiler correction for autocorrelation effects
-        w2: int
-            A window that sharpens the time resolution of the Synchronization
-        measure
-            
+        epsilonIterations: int,optional
+            Number of iterations used to determine the value of epsilon 
 
         Returns
         -------
         float
             The resulting value
         """
-        if bandBounds is None:
-            c1, c2 = self.getRawDataAt(i1), self.getRawDataAt(i2)
-            if l == None:
-                l=1
-            if m==None:
-                m=int(np.sqrt(self.windowSize))
-        else:
-            bounds = self.getBoundsForBand(bandBounds)
-            if l==None:
-                l = self.sampleRate // (3 * bounds[1])
-            if m==None:
-                m = int(3 * bounds[1] / bounds[0])
-            c1, c2 = rebuildSignalFromDFT(self.getFourierTransformAt(
-                i1), bounds), rebuildSignalFromDFT(self.getFourierTransformAt(i2), bounds)
+        c1, c2 = self.getChannel(i1), self.getChannel(i2)
+        if l == None:
+            l=1
+        if m==None:
+            m=int(np.sqrt(self.windowSize))
         l = 1 if l == 0 else l
         if w1==None:
             w1 = int(2 * l * (m - 1))
         if w2 == None:
             w2 = int(10 // pRef + w1)
-        return synchronizationLikelihood(c1, c2, m, l, w1, w2, pRef)
+        return synchronizationLikelihood(c1, c2, m, l, w1, w2, pRef,**kargs)
 
     def engagementLevel(self):
         """
         Returns the engagament level, which is calculated with this formula:
         beta/(alpha+theta), where alpha, beta and theta are the average of the
-        average band values between al the electrodes.
+        average band values between al the channels.
 
         Returns
         -------
@@ -624,301 +601,3 @@ class EEG:
         alpha, beta, theta = np.mean(alphas), np.mean(betas), np.mean(thetas)
 
         return beta / (alpha + theta)
-
-
-def rebuildSignalFromDFT(dft, bounds=None):
-    """
-    Return a rebuilded signal given the Discrete Fourier Transform having the
-    option of giving the frequency bounds.
-
-    Parameters
-    ----------
-    dft: numpy.ndarray
-        A Discrete Fourier Transform
-    bounds: tuple or list, optional
-        The values in index out of the specified bounds are set to 0 and later
-        the IDFT is calculated.
-
-    Returns
-    -------
-    numpy.ndarray
-        The Inverse Discrete Fourier Transform of the input dft
-    """
-    if bounds is None:
-        return np.fft.ifft(dft)
-
-    auxArray = np.zeros(len(dft), dtype=complex)
-    for i in range(bounds[0], bounds[1]):
-        auxArray[i] = dft[i]
-    return np.fft.ifft(auxArray).real
-
-def PFD(data):
-    """
-    Returns the Petrosian Fractal Dimension of the signal given in data.
-    
-    Parameters
-    ----------
-    data: array_like
-        Signal
-    
-    Returns
-    -------
-    float
-        The resulting value
-    """
-    derivative = np.diff(data)
-    size=len(data)
-    return np.log(size) / (np.log(size) + np.log(size / (size + 0.4 * countSignChanges(derivative))))
-
-@jit
-def HFD(data,kMax=None):
-    """
-    Returns the Higuchi Fractal Dimension of the signal given data.
-
-    Parameters
-    ----------
-    data: array_like
-        signal
-
-    kMax: int, optional
-        By default it will be windowSize//2.
-
-    Returns
-    -------
-    float
-        The resulting value
-    """
-    L, x = [], []
-    N = len(data)
-    kMax = N // 2 if kMax is None else kMax
-    for k in range(2, kMax + 1):
-        Lk = []
-        for m in range(0, k):
-            Lmk = 0
-            for i in range(1, (N - m) // k):
-                Lmk += abs(data[m + i * k] - data[m + i * k - k])
-            Lmk = Lmk * (N - 1) / (((N - m) // k) * k)
-            Lk.append(Lmk)
-        Laux=np.mean(Lk)
-        Laux=0.01/k if Laux==0 else Laux
-        L.append(np.log(Laux))
-        x.append([np.log(1 / k), 1])
-
-    (p, r1, r2, s) = np.linalg.lstsq(x, L)
-    return p[0]
-
-def synchronizationLikelihood(c1, c2, m, l, w1, w2, pRef=0.05, epsilonIterations=20):
-    """
-    Returns the Synchronization Likelihood between c1 and c2. This is a
-    modified version of the algorithm.
-
-    Parameters
-    ----------
-    c1: array_like
-        First signal
-    c2: array_like
-        second signal
-    m: int
-        Numbers of elements of the embedded vectors.
-    l: int
-        Separation between elements of the embedded vectors.
-    w1: int
-        Theiler correction for autocorrelation effects
-    w2: int
-        A window that sharpens the time resolution of the Synchronization
-        measure
-
-    Returns
-    -------
-    float
-        A value between 0 and 1. 0 means that the signal are not synchronized
-        at all and 1 means that they are totally synchronized.
-    """
-    if len(c1)!=len(c2):
-        raise ValueError("c1 and c2 must have the same lenght")        
-
-    return __SL(c1, c2, m, l, w1, w2, pRef,epsilonIterations)
-
-# Auxiliar functions for Synchronization Likeihood
-@jit(float64(float64[:],float64[:],int64,int64,int64,int64,float64,int64))
-def __SL(c1, c2, m, l, w1, w2, pRef, epsilonIterations):
-    X1 = __getEmbeddedVectors(c1, m, l)
-    X2 = __getEmbeddedVectors(c2, m, l)
-    
-    D1 = __getDistances(X1)
-    D2 = __getDistances(X2)
-    
-    size=len(X1)
-    E1 = np.zeros(size) 
-    E2 = np.zeros(size)
-    for i in range(size):
-        E1[i]=__getEpsilon(D1, i, pRef,epsilonIterations)
-        E2[i]=__getEpsilon(D2, i, pRef,epsilonIterations)
-    
-    SL = 0
-    SLMax = 0
-    for i in range(size):
-        Sij = 0
-        SijMax = 0
-        for j in range(size):
-            if w1 < abs(j - i) < w2:
-                if D1[i,j] < E1[i]:
-                    if D2[i,j] < E2[i]:
-                        Sij += 1
-                    SijMax += 1
-        SL += Sij
-        SLMax += SijMax
-    return SL / SLMax if SLMax>0 else 0
-
-@jit(int64(float64[:,:],int64,float64))
-def __getHij(D, i, e):
-    summ = 0
-    for j in range(len(D)):
-        if D[i,j] < e:
-            summ += 1
-    return summ
-
-@jit(float64[:,:](float64[:,:]))
-def __getDistances(X):
-    t=len(X)
-    D=np.zeros((t,t),dtype=np.float)
-    for i in range(t):
-        for j in range(i):
-            D[j,i]=D[i,j]=np.linalg.norm(X[i]-X[j])
-
-    return D
-@jit(float64(float64[:,:],int64,float64))
-def __getProbabilityP(D, i, e):
-    return __getHij(D, i, e) /len(D) 
-
-@jit(int64[:,:](float64[:],int64,int64))
-def __getEmbeddedVectors(x, m, l):
-    size = len(x)- (m - 1) * l
-    X = np.zeros((size,m))
-    for i in range(size):
-        X[i]=np.array(x[i:i + m * l:l])
-
-    return X
-
-@jit(float64(float64,float64))
-def __logDiference(p1,p2):
-    return abs(np.log(p2/p1))
-
-@jit(float64(float64[:,:],int64,float64,int64))
-def __getEpsilon(D, i, pRef, iterations):
-    eInf = 0
-    eSup = None
-    bestE=e = 1
-    bestP=p = 1
-    minP = 1 / len(D)
-    for _ in range(iterations):
-        p = __getProbabilityP(D, i, e)
-        if pRef < minP == p:
-            break
-        elif p < pRef:
-            eInf = e
-        elif p > pRef:
-            eSup = e
-        else:
-            bestP=p
-            bestE=e
-            break
-        if __logDiference(bestP,pRef) > __logDiference(p,pRef):
-            bestP=p
-            bestE=e
-        e = e * 2 if eSup is None else (eInf + eSup) / 2
-        
-    return bestE
-
-
-# # Detrented Fluctuation Analysis
-# def dfa():
-#     pass
-
-def getComponent(i, data):
-    """
-    Returns a list with the i component of each list contained in the list
-    given. This method assumes that data is a 2-dimensional array_like.
-
-    Parameters
-    ----------
-    i: int
-        The index from which the new list will be obtained
-    data: 2D array_like
-        The data from which the new list will be obtained
-
-    Returns
-    -------
-    list
-    """
-    return list(map(lambda row: row[i], data))
-
-
-def countSignChanges(data):
-    """
-    Returns the number of sign changes of a 1D array
-
-    Parameters
-    ----------
-    data: array_like
-        The data from which the sign changes will be counted
-
-    Returns
-    -------
-    int
-        Number of sign changes in the data
-    """
-    signChanges = 0
-    for i in range(1, len(data)):
-        if data[i] * data[i - 1] < 0:
-            signChanges += 1
-    return signChanges
-
-
-# HjorthParameters
-def hjorthActivity(data):
-    """
-    Returns the Hjorth Activity of the given data
-
-    Parameters
-    ----------
-    data: array_like
-
-    Returns
-    -------
-    float
-        The resulting value
-    """
-    return np.var(data)
-
-
-def hjorthMobility(data):
-    """
-    Returns the Hjorth Mobility of the given data
-
-    Parameters
-    ----------
-    data: array_like
-
-    Returns
-    -------
-    float
-        The resulting value
-    """
-    return np.sqrt(np.var(np.gradient(data)) / np.var(data))
-
-
-def hjorthComplexity(data):
-    """
-    Returns the Hjorth Complexity of the given data
-
-    Parameters
-    ----------
-    data: array_like
-
-    Returns
-    -------
-    float
-        The resulting value
-    """
-    return hjorthMobility(np.gradient(data)) / hjorthMobility(data)

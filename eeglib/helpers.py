@@ -4,28 +4,88 @@
 This module contains helper classes that are useful to iterating over a EEG
 data stream. currently there is support only for CSV files.
 """
-from abc import ABCMeta, abstractclassmethod
+from abc import ABCMeta
 
 import csv
+import numpy as np
+
 from eeglib.eeg import EEG
+from eeglib.preprocessing import bandPassFilter
 
 
 class Helper(metaclass=ABCMeta):
     """
     This is an abstract class that defines the way every helper works. Before
-    performing any iteration over the data, the methods :meth:`~eeglib.helpers.Helper.prepareIterator`
-    and :meth:`~eeglib.helpers.Helper.prepareEEG` should be called first.
+    performing any iteration over the data, the methods 
+    :meth:`~eeglib.helpers.Helper.prepareIterator` and 
+    :meth:`~eeglib.helpers.Helper.prepareEEG` should be called first.
     """
-    @abstractclassmethod
-    def __iter__(self): pass
+    
+    def __init__(self,sampleRate=None, windowSize=None,windowFunction=None,
+                 highpass=None, lowpass=None):
+        """
+        Parameters
+        ----------
+        sampleRate: numeric, optional
+            The frequency at which the data was recorded. By default its value
+            is the lenght of the data.
+        windowSize: int, optional
+            The size of the window in which the calculations will be done. By
+            default its value is the lenght of the data.
+        windowFunction: String or numpy.ndarray, optional
+            This can be a String with the name of the function (currently only
+            supported **"hamming"**) or it can be a numpy array with a size
+            equals to the window size. ThIn the first case an array with the
+            size of windowSize will be created. The created array will be
+            multiplied by the data in the window whenever FFT is used.
+        highpass: numeric, optional
+            The signal will be filtered above this value.
+        lowpass: numeric, optional
+            The signal will be filtered bellow this value.
+        """
+        self.nChannels = len(self.data)
+        self.nSamples = len(self.data[0])
+        self.startPoint = 0
+        self.endPoint = self.nSamples
+        self.step=None
+        
+        if not sampleRate:
+            self.sampleRate=self.nSamples
+        else:
+            self.sampleRate=sampleRate
+        if not windowSize:
+            windowSize=self.nSamples
+        self.prepareEEG(windowSize,windowFunction=windowFunction)
+        
+        if lowpass or highpass:
+            for i,channel in enumerate(self.data):
+                self.data[i]=bandPassFilter(channel,self.sampleRate,highpass,
+                         lowpass)
+    
+    def __iter__(self):
+        return Iterator(self,self.step,self.startPoint,self.endPoint)
 
-    @abstractclassmethod
-    def __next__(self): pass
+    def __len__(self):
+        return self.nSamples
+    
+    def __getitem__(self, i):
+        """
+        Creates and return a ready iterator thet using the slice given as 
+        parameter.
+        
+        Parameters
+        ----------
+        i: slice
+            The fields of the slice are used to create the iterator.
+        
+        Returns
+        ----------
+        Iterator
+        """
+        if type(i) is not slice:
+            raise ValueError("only slices can be used.")
+        return self.prepareIterator(i.step, i.start, i.stop)
 
-    @abstractclassmethod
-    def __len__(self): pass
-
-    @abstractclassmethod
     def prepareIterator(self, step=None, startPoint=0, endPoint=None):
         """
         Prepares the iterator of the helper.
@@ -41,10 +101,18 @@ class Helper(metaclass=ABCMeta):
             The index of the last sample + 1 until where the iteration will go.
             By default the size of the data.
         """
-        pass
+        if not self.step:
+            raise Exception("prepareEEG method must be called before this one.")
+        if startPoint:
+            self.startPoint=startPoint
+        if endPoint:
+            self.endPoint = endPoint
+        if step:
+            self.step = int(step)
+        return self.__iter__()
 
-    @abstractclassmethod
-    def prepareEEG(self, windowSize, sampleRate, windowFunction=None):
+
+    def prepareEEG(self, windowSize, windowFunction=None):
         """
         Prepares and creates the EEG object that the iteration will use with
         the same parameters that an EEG objects is initialized. Also it returns
@@ -54,8 +122,6 @@ class Helper(metaclass=ABCMeta):
         ----------
         windowSize: int
             The maximun samples the window will store.
-        sampleRate: int
-            The number of samples per second
         windowFunction: String, numpy.ndarray, optional
             This can be a String with the name of the function (currently only
             supported **"hamming"**) or it can be a numpy array with a size
@@ -67,9 +133,12 @@ class Helper(metaclass=ABCMeta):
         -------
         EEG
         """
-        pass
+        self.eeg = EEG(windowSize, self.sampleRate,
+                       self.nChannels, windowFunction=windowFunction, names=self.names)
+        if not self.step:
+            self.step = windowSize
+        return self.eeg
 
-    @abstractclassmethod
     def moveEEGWindow(self,startPoint):
         """
         Moves the window to start at startPoint. Also it returns the inner eeg
@@ -83,9 +152,13 @@ class Helper(metaclass=ABCMeta):
         -------
         EEG
         """
-        pass
+        startPoint=int(startPoint)
+        if startPoint+self.eeg.windowSize>self.nSamples:
+            raise ValueError("The start point is too near of the end.")
+        else:
+            self.eeg.set(self.data[:,startPoint:startPoint+self.eeg.windowSize],columnMode=True)
+        return self.eeg
     
-    @abstractclassmethod
     def getEEG(self):
         """
         Returns the EEG object.
@@ -94,16 +167,35 @@ class Helper(metaclass=ABCMeta):
         -------
         EEG
         """
-        pass
+        return self.eeg
 
+class Iterator():
+    def __init__(self, helper,step,auxPoint, endPoint):
+        self.helper=helper
+        self.step=step
+        self.auxPoint=auxPoint
+        self.endPoint=endPoint
+        
+    def __iter__(self):
+        return self
+
+    # Function for iterations
+    def __next__(self):
+        if self.auxPoint > self.endPoint-self.helper.eeg.windowSize:
+            raise StopIteration
+        self.helper.moveEEGWindow(self.auxPoint)
+        self.auxPoint += self.step
+        return self.helper.eeg
 
 class CSVHelper(Helper):
     """
     This class is for appliying diferents operations using the EEG class over a
     csv file.
     """
-    def __init__(self, path, selectedColumns=None):
+    def __init__(self, path,*args, selectedColumns=None,**kargs):
         """
+        The rest of parameters can be seen at :meth:`Helper.__init__`
+        
         Parameters
         ----------
         path: str
@@ -121,67 +213,20 @@ class CSVHelper(Helper):
             for row in reader:
                 for i,val in enumerate(row):
                     self.data[i].append(float(val))
-            try:
-                l1=list(map(lambda x: float(x),l1))
-                for value,column in zip(l1,self.data):
-                    column.insert(0,value)
-                self.names=None
-            except ValueError:
-                self.names=l1
-            if selectedColumns:
-                for i,column in enumerate(selectedColumns):
-                    if type(selectedColumns[i]) is str:
-                        selectedColumns[i]=self.names.index(column)
-                self.names=[self.names[i] for i in selectedColumns]
-                self.data=[self.data[i] for i in selectedColumns]
-                
-            self.electrodeNumber = len(self.data)
-            self.nSamples = len(self.data[0])
-            self.startPoint = 0
-            self.endPoint = self.nSamples
-
-    # Function for iterations
-    def __iter__(self):
-        self.auxPoint = self.startPoint
-        return self
-
-    # Function for iterations
-    def __next__(self):
-        if self.auxPoint >= self.endPoint:
-            raise StopIteration
-        self.moveEEGWindow(self.auxPoint)
-        self.auxPoint += self.step
-        return self.eeg
-
-    def __len__(self):
-        return self.nSamples
-
-    def prepareIterator(self, step=1, startPoint=0, endPoint=None):
-        "Go to :meth:`eeglib.helpers.Helper.prepareIterator`"
-        self.startPoint=startPoint
-        if endPoint is not None:
-            self.endPoint = endPoint
-        if step is not None:
-            self.step = float(step)
-
-    def prepareEEG(self, windowSize, sampleRate, windowFunction=None):
-        "Go to :meth:`eeglib.helpers.Helper.prepareEEG`"
-        self.eeg = EEG(windowSize, sampleRate,
-                       self.electrodeNumber, windowFunction=windowFunction, names=self.names)
-        self.step = windowSize
-        return self.eeg
-
-    # This moves the current window to start at |startPoint|
-    def moveEEGWindow(self, startPoint):
-        "Go to :meth:`eeglib.helpers.Helper.moveEEGWindow`"
-        startPoint=int(startPoint)
-        if startPoint+self.eeg.windowSize>self.nSamples:
-            raise ValueError("The start point is too near of the end.")
-        else:
-            self.eeg.set([col[startPoint:startPoint + self.eeg.windowSize] for
-                          col in self.data],columnMode=True)
-        return self.eeg
-
-    def getEEG(self):
-        "Go to :meth:`eeglib.helpers.Helper.getEEG`"
-        return self.eeg
+        try:
+            l1=list(map(lambda x: float(x),l1))
+            for value,column in zip(l1,self.data):
+                column.insert(0,value)
+            self.names=None
+        except ValueError:
+            self.names=l1
+        if selectedColumns:
+            for i,column in enumerate(selectedColumns):
+                if type(selectedColumns[i]) is str:
+                    selectedColumns[i]=self.names.index(column)
+            self.names=[self.names[i] for i in selectedColumns]
+            self.data=[self.data[i] for i in selectedColumns]
+        
+        self.data=np.array(self.data)
+        
+        super().__init__(*args,**kargs)
