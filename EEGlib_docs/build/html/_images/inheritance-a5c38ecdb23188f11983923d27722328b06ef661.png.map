@@ -1,0 +1,5 @@
+<map id="inheritancebd7d255055" name="inheritancebd7d255055">
+<area shape="rect" id="node1" href="#eeglib.helpers.CSVHelper" target="_top" title="This class is for appliying diferents operations using the EEG class over a" alt="" coords="220,55,407,80"/>
+<area shape="rect" id="node2" href="#eeglib.helpers.Helper" target="_top" title="This is an abstract class that defines the way every helper works. Before" alt="" coords="8,55,169,80"/>
+<area shape="rect" id="node3" href="#eeglib.helpers.Iterator" target="_top" title="eeglib.helpers.Iterator" alt="" coords="5,5,172,31"/>
+</map>

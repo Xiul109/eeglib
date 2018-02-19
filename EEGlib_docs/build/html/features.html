@@ -1,0 +1,321 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Documentation of eeglib.features module &#8212; EEGlib 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Documentation of eeglib.preprocessing module" href="preprocessing.html" />
+    <link rel="prev" title="Documentation of eeglib.helpers module" href="helpers.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="documentation-of-eeglib-features-module">
+<h1>Documentation of eeglib.features module<a class="headerlink" href="#documentation-of-eeglib-features-module" title="Permalink to this headline">¶</a></h1>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+</tbody>
+</table>
+<span class="target" id="module-eeglib.features"></span><p>This module define the functions of the features for EEG analysis</p>
+<dl class="attribute">
+<dt id="eeglib.features.HFD">
+<code class="descclassname">eeglib.features.</code><code class="descname">HFD</code><a class="headerlink" href="#eeglib.features.HFD" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Higuchi Fractal Dimension of the signal given data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data: array_like</strong></p>
+<blockquote>
+<div><p>signal</p>
+</div></blockquote>
+<p><strong>kMax: int, optional</strong></p>
+<blockquote>
+<div><p>By default it will be windowSize//2.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The resulting value</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="eeglib.features.PFD">
+<code class="descclassname">eeglib.features.</code><code class="descname">PFD</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.features.PFD" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Petrosian Fractal Dimension of the signal given in data.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data: array_like</strong></p>
+<blockquote>
+<div><p>Signal</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The resulting value</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="eeglib.features.averageBandValues">
+<code class="descclassname">eeglib.features.</code><code class="descname">averageBandValues</code><span class="sig-paren">(</span><em>fft</em>, <em>bands</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.features.averageBandValues" title="Permalink to this definition">¶</a></dt>
+<dd><p>Given a Fourier Transform, this function returns it averaged across the
+bands selected. The final value is calculated by multiplying the mean of
+the data in the given bounds by 2/len(fft).</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>fft: array_like</strong></p>
+<blockquote>
+<div><p>The result of applying the fft function to a signal</p>
+</div></blockquote>
+<p><strong>bands: dict{key:tuple}</strong></p>
+<blockquote>
+<div><p>The bands names(key) and bounds(value)</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">dict{key:float}</p>
+<blockquote class="last">
+<div><p>The average value for each band</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="eeglib.features.countSignChanges">
+<code class="descclassname">eeglib.features.</code><code class="descname">countSignChanges</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.features.countSignChanges" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the number of sign changes of a 1D array</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data: array_like</strong></p>
+<blockquote>
+<div><p>The data from which the sign changes will be counted</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">int</p>
+<blockquote class="last">
+<div><p>Number of sign changes in the data</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="eeglib.features.hjorthActivity">
+<code class="descclassname">eeglib.features.</code><code class="descname">hjorthActivity</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.features.hjorthActivity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Hjorth Activity of the given data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data: array_like</strong></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The resulting value</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="eeglib.features.hjorthComplexity">
+<code class="descclassname">eeglib.features.</code><code class="descname">hjorthComplexity</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.features.hjorthComplexity" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Hjorth Complexity of the given data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data: array_like</strong></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The resulting value</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="eeglib.features.hjorthMobility">
+<code class="descclassname">eeglib.features.</code><code class="descname">hjorthMobility</code><span class="sig-paren">(</span><em>data</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.features.hjorthMobility" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Hjorth Mobility of the given data</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>data: array_like</strong></p>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>The resulting value</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="function">
+<dt id="eeglib.features.synchronizationLikelihood">
+<code class="descclassname">eeglib.features.</code><code class="descname">synchronizationLikelihood</code><span class="sig-paren">(</span><em>c1</em>, <em>c2</em>, <em>m</em>, <em>l</em>, <em>w1</em>, <em>w2</em>, <em>pRef=0.05</em>, <em>epsilonIterations=20</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.features.synchronizationLikelihood" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the Synchronization Likelihood between c1 and c2. This is a
+modified version of the algorithm.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>c1: array_like</strong></p>
+<blockquote>
+<div><p>First signal</p>
+</div></blockquote>
+<p><strong>c2: array_like</strong></p>
+<blockquote>
+<div><p>second signal</p>
+</div></blockquote>
+<p><strong>m: int</strong></p>
+<blockquote>
+<div><p>Numbers of elements of the embedded vectors.</p>
+</div></blockquote>
+<p><strong>l: int</strong></p>
+<blockquote>
+<div><p>Separation between elements of the embedded vectors.</p>
+</div></blockquote>
+<p><strong>w1: int</strong></p>
+<blockquote>
+<div><p>Theiler correction for autocorrelation effects</p>
+</div></blockquote>
+<p><strong>w2: int</strong></p>
+<blockquote>
+<div><p>A window that sharpens the time resolution of the Synchronization
+measure</p>
+</div></blockquote>
+<p><strong>pRef: float, optional</strong></p>
+<blockquote>
+<div><p>The pRef param of the synchronizationLikelihood. Default 0.05</p>
+</div></blockquote>
+<p><strong>epsilonIterations: int,optional</strong></p>
+<blockquote>
+<div><p>Number of iterations used to determine the value of epsilon. Default:20</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first">float</p>
+<blockquote class="last">
+<div><p>A value between 0 and 1. 0 means that the signal are not synchronized
+at all and 1 means that they are totally synchronized.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="helpers.html" title="previous chapter">Documentation of eeglib.helpers module</a></li>
+      <li>Next: <a href="preprocessing.html" title="next chapter">Documentation of eeglib.preprocessing module</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Luis Cabañero Gómez.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>

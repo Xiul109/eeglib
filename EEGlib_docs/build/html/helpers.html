@@ -1,0 +1,411 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+    <title>Documentation of eeglib.helpers module &#8212; EEGlib 0.1 documentation</title>
+    <link rel="stylesheet" href="_static/alabaster.css" type="text/css" />
+    <link rel="stylesheet" href="_static/pygments.css" type="text/css" />
+    <script type="text/javascript">
+      var DOCUMENTATION_OPTIONS = {
+        URL_ROOT:    './',
+        VERSION:     '0.1',
+        COLLAPSE_INDEX: false,
+        FILE_SUFFIX: '.html',
+        HAS_SOURCE:  true,
+        SOURCELINK_SUFFIX: '.txt'
+      };
+    </script>
+    <script type="text/javascript" src="_static/jquery.js"></script>
+    <script type="text/javascript" src="_static/underscore.js"></script>
+    <script type="text/javascript" src="_static/doctools.js"></script>
+    <link rel="index" title="Index" href="genindex.html" />
+    <link rel="search" title="Search" href="search.html" />
+    <link rel="next" title="Documentation of eeglib.features module" href="features.html" />
+    <link rel="prev" title="Documentation of eeglib.eeg module" href="eeg.html" />
+   
+  <link rel="stylesheet" href="_static/custom.css" type="text/css" />
+  
+  
+  <meta name="viewport" content="width=device-width, initial-scale=0.9, maximum-scale=0.9" />
+
+  </head>
+  <body>
+  
+
+    <div class="document">
+      <div class="documentwrapper">
+        <div class="bodywrapper">
+          <div class="body" role="main">
+            
+  <div class="section" id="documentation-of-eeglib-helpers-module">
+<h1>Documentation of eeglib.helpers module<a class="headerlink" href="#documentation-of-eeglib-helpers-module" title="Permalink to this headline">¶</a></h1>
+<img src="_images/inheritance-a5c38ecdb23188f11983923d27722328b06ef661.png" alt="Inheritance diagram of eeglib.helpers" usemap="#inheritancebd7d255055" class="inheritance"/>
+<map id="inheritancebd7d255055" name="inheritancebd7d255055">
+<area shape="rect" id="node1" href="#eeglib.helpers.CSVHelper" target="_top" title="This class is for appliying diferents operations using the EEG class over a" alt="" coords="220,55,407,80"/>
+<area shape="rect" id="node2" href="#eeglib.helpers.Helper" target="_top" title="This is an abstract class that defines the way every helper works. Before" alt="" coords="8,55,169,80"/>
+<area shape="rect" id="node3" href="#eeglib.helpers.Iterator" target="_top" title="eeglib.helpers.Iterator" alt="" coords="5,5,172,31"/>
+</map>
+<span class="target" id="module-eeglib.helpers"></span><p>This module contains helper classes that are useful to iterating over a EEG
+data stream. currently there is support only for CSV files.</p>
+<dl class="class">
+<dt id="eeglib.helpers.CSVHelper">
+<em class="property">class </em><code class="descclassname">eeglib.helpers.</code><code class="descname">CSVHelper</code><span class="sig-paren">(</span><em>path</em>, <em>*args</em>, <em>selectedColumns=None</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.helpers.CSVHelper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <a class="reference internal" href="#eeglib.helpers.Helper" title="eeglib.helpers.Helper"><code class="xref py py-class docutils literal"><span class="pre">eeglib.helpers.Helper</span></code></a></p>
+<p>This class is for appliying diferents operations using the EEG class over a
+csv file.</p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#eeglib.helpers.CSVHelper.getEEG" title="eeglib.helpers.CSVHelper.getEEG"><code class="xref py py-obj docutils literal"><span class="pre">getEEG</span></code></a>()</td>
+<td>Returns the EEG object.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#eeglib.helpers.CSVHelper.moveEEGWindow" title="eeglib.helpers.CSVHelper.moveEEGWindow"><code class="xref py py-obj docutils literal"><span class="pre">moveEEGWindow</span></code></a>(startPoint)</td>
+<td>Moves the window to start at startPoint.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#eeglib.helpers.CSVHelper.prepareEEG" title="eeglib.helpers.CSVHelper.prepareEEG"><code class="xref py py-obj docutils literal"><span class="pre">prepareEEG</span></code></a>(windowSize[,&nbsp;windowFunction])</td>
+<td>Prepares and creates the EEG object that the iteration will use with the same parameters that an EEG objects is initialized.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#eeglib.helpers.CSVHelper.prepareIterator" title="eeglib.helpers.CSVHelper.prepareIterator"><code class="xref py py-obj docutils literal"><span class="pre">prepareIterator</span></code></a>([step,&nbsp;startPoint,&nbsp;endPoint])</td>
+<td>Prepares the iterator of the helper.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="eeglib.helpers.CSVHelper.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>path</em>, <em>*args</em>, <em>selectedColumns=None</em>, <em>**kargs</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.helpers.CSVHelper.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><p>The rest of parameters can be seen at <a class="reference internal" href="#eeglib.helpers.Helper.__init__" title="eeglib.helpers.Helper.__init__"><code class="xref py py-meth docutils literal"><span class="pre">Helper.__init__()</span></code></a></p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>path: str</strong></p>
+<blockquote>
+<div><p>The path to the csv file</p>
+</div></blockquote>
+<p><strong>selectedFields: list of strings or ints</strong></p>
+<blockquote class="last">
+<div><p>If the data file has names asociated to each columns, those columns
+can be selected through the name or the index of the column. If the
+data file hasn’t names in the columns, they can be selected just by
+the index.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.helpers.CSVHelper.getEEG">
+<code class="descname">getEEG</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.helpers.CSVHelper.getEEG" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the EEG object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">EEG</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.helpers.CSVHelper.moveEEGWindow">
+<code class="descname">moveEEGWindow</code><span class="sig-paren">(</span><em>startPoint</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.helpers.CSVHelper.moveEEGWindow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Moves the window to start at startPoint. Also it returns the inner eeg
+object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>startPoint: int</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">EEG</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.helpers.CSVHelper.prepareEEG">
+<code class="descname">prepareEEG</code><span class="sig-paren">(</span><em>windowSize</em>, <em>windowFunction=None</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.helpers.CSVHelper.prepareEEG" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepares and creates the EEG object that the iteration will use with
+the same parameters that an EEG objects is initialized. Also it returns
+the inner eeg object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>windowSize: int</strong></p>
+<blockquote>
+<div><p>The maximun samples the window will store.</p>
+</div></blockquote>
+<p><strong>windowFunction: String, numpy.ndarray, optional</strong></p>
+<blockquote>
+<div><p>This can be a String with the name of the function (currently only
+supported <strong>“hamming”</strong>) or it can be a numpy array with a size
+equals to the window size. ThIn the first case an array with the
+size of windowSize will be created. The created array will be
+multiplied by the data in the window.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">EEG</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.helpers.CSVHelper.prepareIterator">
+<code class="descname">prepareIterator</code><span class="sig-paren">(</span><em>step=None</em>, <em>startPoint=0</em>, <em>endPoint=None</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.helpers.CSVHelper.prepareIterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepares the iterator of the helper.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>step: int,optional</strong></p>
+<blockquote>
+<div><p>Number of samples to be skipped in each iteration.</p>
+</div></blockquote>
+<p><strong>startPoint: int, optional</strong></p>
+<blockquote>
+<div><p>The index of first sample from where the iteration will start. By
+default 0.</p>
+</div></blockquote>
+<p><strong>endPoint: int, optional</strong></p>
+<blockquote class="last">
+<div><p>The index of the last sample + 1 until where the iteration will go.
+By default the size of the data.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="eeglib.helpers.Helper">
+<em class="property">class </em><code class="descclassname">eeglib.helpers.</code><code class="descname">Helper</code><span class="sig-paren">(</span><em>sampleRate=None</em>, <em>windowSize=None</em>, <em>windowFunction=None</em>, <em>highpass=None</em>, <em>lowpass=None</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.helpers.Helper" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<p>This is an abstract class that defines the way every helper works. Before
+performing any iteration over the data, the methods 
+<a class="reference internal" href="#eeglib.helpers.Helper.prepareIterator" title="eeglib.helpers.Helper.prepareIterator"><code class="xref py py-meth docutils literal"><span class="pre">prepareIterator()</span></code></a> and 
+<a class="reference internal" href="#eeglib.helpers.Helper.prepareEEG" title="eeglib.helpers.Helper.prepareEEG"><code class="xref py py-meth docutils literal"><span class="pre">prepareEEG()</span></code></a> should be called first.</p>
+<p class="rubric">Methods</p>
+<table border="1" class="longtable docutils">
+<colgroup>
+<col width="10%" />
+<col width="90%" />
+</colgroup>
+<tbody valign="top">
+<tr class="row-odd"><td><a class="reference internal" href="#eeglib.helpers.Helper.getEEG" title="eeglib.helpers.Helper.getEEG"><code class="xref py py-obj docutils literal"><span class="pre">getEEG</span></code></a>()</td>
+<td>Returns the EEG object.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#eeglib.helpers.Helper.moveEEGWindow" title="eeglib.helpers.Helper.moveEEGWindow"><code class="xref py py-obj docutils literal"><span class="pre">moveEEGWindow</span></code></a>(startPoint)</td>
+<td>Moves the window to start at startPoint.</td>
+</tr>
+<tr class="row-odd"><td><a class="reference internal" href="#eeglib.helpers.Helper.prepareEEG" title="eeglib.helpers.Helper.prepareEEG"><code class="xref py py-obj docutils literal"><span class="pre">prepareEEG</span></code></a>(windowSize[,&nbsp;windowFunction])</td>
+<td>Prepares and creates the EEG object that the iteration will use with the same parameters that an EEG objects is initialized.</td>
+</tr>
+<tr class="row-even"><td><a class="reference internal" href="#eeglib.helpers.Helper.prepareIterator" title="eeglib.helpers.Helper.prepareIterator"><code class="xref py py-obj docutils literal"><span class="pre">prepareIterator</span></code></a>([step,&nbsp;startPoint,&nbsp;endPoint])</td>
+<td>Prepares the iterator of the helper.</td>
+</tr>
+</tbody>
+</table>
+<dl class="method">
+<dt id="eeglib.helpers.Helper.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>sampleRate=None</em>, <em>windowSize=None</em>, <em>windowFunction=None</em>, <em>highpass=None</em>, <em>lowpass=None</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.helpers.Helper.__init__" title="Permalink to this definition">¶</a></dt>
+<dd><table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>sampleRate: numeric, optional</strong></p>
+<blockquote>
+<div><p>The frequency at which the data was recorded. By default its value
+is the lenght of the data.</p>
+</div></blockquote>
+<p><strong>windowSize: int, optional</strong></p>
+<blockquote>
+<div><p>The size of the window in which the calculations will be done. By
+default its value is the lenght of the data.</p>
+</div></blockquote>
+<p><strong>windowFunction: String or numpy.ndarray, optional</strong></p>
+<blockquote>
+<div><p>This can be a String with the name of the function (currently only
+supported <strong>“hamming”</strong>) or it can be a numpy array with a size
+equals to the window size. ThIn the first case an array with the
+size of windowSize will be created. The created array will be
+multiplied by the data in the window whenever FFT is used.</p>
+</div></blockquote>
+<p><strong>highpass: numeric, optional</strong></p>
+<blockquote>
+<div><p>The signal will be filtered above this value.</p>
+</div></blockquote>
+<p><strong>lowpass: numeric, optional</strong></p>
+<blockquote class="last">
+<div><p>The signal will be filtered bellow this value.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.helpers.Helper.getEEG">
+<code class="descname">getEEG</code><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.helpers.Helper.getEEG" title="Permalink to this definition">¶</a></dt>
+<dd><p>Returns the EEG object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Returns:</th><td class="field-body">EEG</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.helpers.Helper.moveEEGWindow">
+<code class="descname">moveEEGWindow</code><span class="sig-paren">(</span><em>startPoint</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.helpers.Helper.moveEEGWindow" title="Permalink to this definition">¶</a></dt>
+<dd><p>Moves the window to start at startPoint. Also it returns the inner eeg
+object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><strong>startPoint: int</strong></td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body">EEG</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.helpers.Helper.prepareEEG">
+<code class="descname">prepareEEG</code><span class="sig-paren">(</span><em>windowSize</em>, <em>windowFunction=None</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.helpers.Helper.prepareEEG" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepares and creates the EEG object that the iteration will use with
+the same parameters that an EEG objects is initialized. Also it returns
+the inner eeg object.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>windowSize: int</strong></p>
+<blockquote>
+<div><p>The maximun samples the window will store.</p>
+</div></blockquote>
+<p><strong>windowFunction: String, numpy.ndarray, optional</strong></p>
+<blockquote>
+<div><p>This can be a String with the name of the function (currently only
+supported <strong>“hamming”</strong>) or it can be a numpy array with a size
+equals to the window size. ThIn the first case an array with the
+size of windowSize will be created. The created array will be
+multiplied by the data in the window.</p>
+</div></blockquote>
+</td>
+</tr>
+<tr class="field-even field"><th class="field-name">Returns:</th><td class="field-body"><p class="first last">EEG</p>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+<dl class="method">
+<dt id="eeglib.helpers.Helper.prepareIterator">
+<code class="descname">prepareIterator</code><span class="sig-paren">(</span><em>step=None</em>, <em>startPoint=0</em>, <em>endPoint=None</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.helpers.Helper.prepareIterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Prepares the iterator of the helper.</p>
+<table class="docutils field-list" frame="void" rules="none">
+<col class="field-name" />
+<col class="field-body" />
+<tbody valign="top">
+<tr class="field-odd field"><th class="field-name">Parameters:</th><td class="field-body"><p class="first"><strong>step: int,optional</strong></p>
+<blockquote>
+<div><p>Number of samples to be skipped in each iteration.</p>
+</div></blockquote>
+<p><strong>startPoint: int, optional</strong></p>
+<blockquote>
+<div><p>The index of first sample from where the iteration will start. By
+default 0.</p>
+</div></blockquote>
+<p><strong>endPoint: int, optional</strong></p>
+<blockquote class="last">
+<div><p>The index of the last sample + 1 until where the iteration will go.
+By default the size of the data.</p>
+</div></blockquote>
+</td>
+</tr>
+</tbody>
+</table>
+</dd></dl>
+
+</dd></dl>
+
+<dl class="class">
+<dt id="eeglib.helpers.Iterator">
+<em class="property">class </em><code class="descclassname">eeglib.helpers.</code><code class="descname">Iterator</code><span class="sig-paren">(</span><em>helper</em>, <em>step</em>, <em>auxPoint</em>, <em>endPoint</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.helpers.Iterator" title="Permalink to this definition">¶</a></dt>
+<dd><p>Bases: <code class="xref py py-class docutils literal"><span class="pre">object</span></code></p>
+<dl class="method">
+<dt id="eeglib.helpers.Iterator.__init__">
+<code class="descname">__init__</code><span class="sig-paren">(</span><em>helper</em>, <em>step</em>, <em>auxPoint</em>, <em>endPoint</em><span class="sig-paren">)</span><a class="headerlink" href="#eeglib.helpers.Iterator.__init__" title="Permalink to this definition">¶</a></dt>
+<dd></dd></dl>
+
+</dd></dl>
+
+</div>
+
+
+          </div>
+        </div>
+      </div>
+      <div class="sphinxsidebar" role="navigation" aria-label="main navigation">
+        <div class="sphinxsidebarwrapper"><div class="relations">
+<h3>Related Topics</h3>
+<ul>
+  <li><a href="index.html">Documentation overview</a><ul>
+      <li>Previous: <a href="eeg.html" title="previous chapter">Documentation of eeglib.eeg module</a></li>
+      <li>Next: <a href="features.html" title="next chapter">Documentation of eeglib.features module</a></li>
+  </ul></li>
+</ul>
+</div>
+<div id="searchbox" style="display: none" role="search">
+  <h3>Quick search</h3>
+    <form class="search" action="search.html" method="get">
+      <div><input type="text" name="q" /></div>
+      <div><input type="submit" value="Go" /></div>
+      <input type="hidden" name="check_keywords" value="yes" />
+      <input type="hidden" name="area" value="default" />
+    </form>
+</div>
+<script type="text/javascript">$('#searchbox').show(0);</script>
+        </div>
+      </div>
+      <div class="clearer"></div>
+    </div>
+    <div class="footer">
+      &copy;2017, Luis Cabañero Gómez.
+      
+      |
+      Powered by <a href="http://sphinx-doc.org/">Sphinx 1.6.5</a>
+      &amp; <a href="https://github.com/bitprophet/alabaster">Alabaster 0.7.10</a>
+      
+    </div>
+
+    
+
+    
+  </body>
+</html>
