@@ -446,7 +446,8 @@ class EEG:
             procesing.
         """
         return self.__applyFunctionTo(PFD,i)
-    def HFD(self, i, kMax=None):
+    
+    def HFD(self, i=None, kMax=None):
         """
         Returns the Higuchi Fractal Dimension at the given index of the window.
 

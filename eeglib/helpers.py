@@ -8,6 +8,8 @@ from abc import ABCMeta
 
 import csv
 import numpy as np
+from scipy.stats import zscore
+from sklearn.decomposition import FastICA
 
 from eeglib.eeg import EEG
 from eeglib.preprocessing import bandPassFilter
@@ -22,7 +24,7 @@ class Helper(metaclass=ABCMeta):
     """
     
     def __init__(self,sampleRate=None, windowSize=None,windowFunction=None,
-                 highpass=None, lowpass=None):
+                 highpass=None, lowpass=None, normalize=False, ICA=False):
         """
         Parameters
         ----------
@@ -42,6 +44,10 @@ class Helper(metaclass=ABCMeta):
             The signal will be filtered above this value.
         lowpass: numeric, optional
             The signal will be filtered bellow this value.
+        normalize: boolean, optional
+            If True, the data will be normalizing using z-scores.
+        ICA: boolean, optional
+            If True, Independent Component Analysis will be applied to the data
         """
         self.nChannels = len(self.data)
         self.nSamples = len(self.data[0])
@@ -61,6 +67,12 @@ class Helper(metaclass=ABCMeta):
             for i,channel in enumerate(self.data):
                 self.data[i]=bandPassFilter(channel,self.sampleRate,highpass,
                          lowpass)
+        
+        if normalize:
+            self.data=zscore(self.data,axis=1)
+        if ICA:
+            ica=FastICA()
+            self.data=ica.fit_transform(self.data.transpose()).transpose()
     
     def __iter__(self):
         return Iterator(self,self.step,self.startPoint,self.endPoint)

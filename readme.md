@@ -27,6 +27,8 @@ In order to install this package you just have to open a terminal in this direct
 
 * numpy
 * numba
+* scipy
+* sklearn
 
 # Getting started
 
@@ -55,8 +57,6 @@ This returns an array of the same size of the channels of the data (5) and each 
 The previous example applies the PFD to all the data in the file, but you may want to segment the data in different windows and that can be done in the next way:
 
 ```python
-from eeglib.helpers import CSVHelper
-
 helper= CSVHelper("fake_EEG_signal.csv",windowSize=256)
 
 for eeg in helper:
@@ -79,13 +79,24 @@ Now the function has been called 4 times, this is because of the data has a leng
 Now you may want to move the windows in another ways, like the ones that are shown in the next image:
 ![windows](/Examples/slidingWindow.png)
 
-So, if i want to make the windows overlap between them you can do it this way:
+So, if you want to make the windows overlap between them you can do it this way:
 
 ```python
-from eeglib.helpers import CSVHelper
-
 helper= CSVHelper("fake_EEG_signal.csv",windowSize=256)
 
 for eeg in helper[::128]:
     print(eeg.PFD())
+```
+
+## Preprocessing
+
+Maybe you want to preprocess the signals stored in the window before extracting features from them. Currently this library allows the next Preprocessings:
+* Bandpass filtering
+* Z-Scores normalization
+* Independent Component Analysis
+
+These preprocessings can be applied at the load of the data by the Helpers:
+```python
+helper = CSVHelper("fake_EEG_signal.csv",
+        lowpass=30, highpass=1, normalize=True, ICA=True)
 ```

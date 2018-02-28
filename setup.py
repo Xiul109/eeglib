@@ -3,7 +3,7 @@
 
 from setuptools import setup, find_packages
 
-__version__ = "0.2.6"
+__version__ = "0.2.7"
 
 setup(name='eeglib',
       version = __version__,
@@ -29,5 +29,5 @@ setup(name='eeglib',
 
       packages=find_packages(exclude=["docs"]),
 
-      install_requires = ['numpy','numba']
+      install_requires = ['numpy','scipy','sklearn','numba']
 )

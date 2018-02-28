@@ -65,23 +65,24 @@ def HFD(data,kMax=None):
     float
         The resulting value
     """
-    L, x = [], []
+    data=np.array(data)
     N = len(data)
     kMax = N // 2 if kMax is None else kMax
+    L = np.zeros(kMax-1)
+    x = np.array((-np.log(np.arange(2,kMax+1)),np.ones(kMax-1))).transpose()
     for k in range(2, kMax + 1):
-        Lk = []
+        Lk = np.zeros(k)
         for m in range(0, k):
-            Lmk = 0
+            Lmk = 0            
             for i in range(1, (N - m) // k):
                 Lmk += abs(data[m + i * k] - data[m + i * k - k])
-            Lmk = Lmk * (N - 1) / (((N - m) // k) * k)
-            Lk.append(Lmk)
+            Lmk = Lmk * (N - 1) / (((N - m) // k) * k * k)
+            Lk[m]=Lmk
         Laux=np.mean(Lk)
         Laux=0.01/k if Laux==0 else Laux
-        L.append(np.log(Laux))
-        x.append([np.log(1 / k), 1])
+        L[k-2]=np.log(Laux)
 
-    (p, r1, r2, s) = np.linalg.lstsq(x, L)
+    p, _, _, _ = np.linalg.lstsq(x, L)
     return p[0]
 
 def synchronizationLikelihood(c1, c2, m, l, w1, w2, pRef=0.05, epsilonIterations=20):
