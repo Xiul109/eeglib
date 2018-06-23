@@ -2,7 +2,7 @@
 # -*- coding: utf-8 -*-
 """
 This module contains helper classes that are useful to iterating over a EEG
-data stream. currently there is support only for CSV files.
+data stream. Currently there is support only for CSV files.
 """
 from abc import ABCMeta
 
@@ -23,8 +23,8 @@ class Helper(metaclass=ABCMeta):
     :meth:`~eeglib.helpers.Helper.prepareEEG` should be called first.
     """
     
-    def __init__(self,sampleRate=None, windowSize=None,windowFunction=None,
-                 highpass=None, lowpass=None, normalize=False, ICA=False):
+    def __init__(self,sampleRate=None, windowSize=None, highpass=None, 
+                 lowpass=None, normalize=False, ICA=False):
         """
         Parameters
         ----------
@@ -34,12 +34,6 @@ class Helper(metaclass=ABCMeta):
         windowSize: int, optional
             The size of the window in which the calculations will be done. By
             default its value is the lenght of the data.
-        windowFunction: String or numpy.ndarray, optional
-            This can be a String with the name of the function (currently only
-            supported **"hamming"**) or it can be a numpy array with a size
-            equals to the window size. ThIn the first case an array with the
-            size of windowSize will be created. The created array will be
-            multiplied by the data in the window whenever FFT is used.
         highpass: numeric, optional
             The signal will be filtered above this value.
         lowpass: numeric, optional
@@ -59,9 +53,11 @@ class Helper(metaclass=ABCMeta):
             self.sampleRate=self.nSamples
         else:
             self.sampleRate=sampleRate
+       
         if not windowSize:
-            windowSize=self.nSamples
-        self.prepareEEG(windowSize,windowFunction=windowFunction)
+            windowSize=self.sampleRate
+            
+        self.prepareEEG(windowSize)
         
         if lowpass or highpass:
             for i,channel in enumerate(self.data):
@@ -114,7 +110,8 @@ class Helper(metaclass=ABCMeta):
             By default the size of the data.
         """
         if not self.step:
-            raise Exception("prepareEEG method must be called before this one.")
+            raise Exception("prepareEEG method must be called before \
+                            prepareIterator.")
         if startPoint:
             self.startPoint=startPoint
         if endPoint:
@@ -124,7 +121,7 @@ class Helper(metaclass=ABCMeta):
         return self.__iter__()
 
 
-    def prepareEEG(self, windowSize, windowFunction=None):
+    def prepareEEG(self, windowSize):
         """
         Prepares and creates the EEG object that the iteration will use with
         the same parameters that an EEG objects is initialized. Also it returns
@@ -134,19 +131,13 @@ class Helper(metaclass=ABCMeta):
         ----------
         windowSize: int
             The maximun samples the window will store.
-        windowFunction: String, numpy.ndarray, optional
-            This can be a String with the name of the function (currently only
-            supported **"hamming"**) or it can be a numpy array with a size
-            equals to the window size. ThIn the first case an array with the
-            size of windowSize will be created. The created array will be
-            multiplied by the data in the window.
         
         Returns
         -------
         EEG
         """
-        self.eeg = EEG(windowSize, self.sampleRate,
-                       self.nChannels, windowFunction=windowFunction, names=self.names)
+        self.eeg = EEG(windowSize, self.sampleRate, self.nChannels,
+                       names=self.names)
         if not self.step:
             self.step = windowSize
         return self.eeg
@@ -168,7 +159,8 @@ class Helper(metaclass=ABCMeta):
         if startPoint+self.eeg.windowSize>self.nSamples:
             raise ValueError("The start point is too near of the end.")
         else:
-            self.eeg.set(self.data[:,startPoint:startPoint+self.eeg.windowSize],columnMode=True)
+            self.eeg.set(self.data[:,startPoint:startPoint+self.eeg.windowSize]
+                         ,columnMode=True)
         return self.eeg
     
     def getEEG(self):

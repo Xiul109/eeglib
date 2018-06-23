@@ -1,6 +1,7 @@
 "This module define the functions of the features for EEG analysis"
 
 import numpy as np
+from scipy.spatial.distance import chebyshev
 from numba import jit, float64,int64
 
 
@@ -88,7 +89,7 @@ def HFD(data,kMax=None):
 def synchronizationLikelihood(c1, c2, m, l, w1, w2, pRef=0.05, epsilonIterations=20):
     """
     Returns the Synchronization Likelihood between c1 and c2. This is a
-    modified version of the algorithm.
+    modified version of the original algorithm.
 
     Parameters
     ----------
@@ -281,3 +282,43 @@ def hjorthComplexity(data):
         The resulting value
     """
     return hjorthMobility(np.gradient(data)) / hjorthMobility(data)
+
+
+# Sample Entropy
+def MSE(data, m = 2, l = 1, r = None, fr = 0.2):
+    """
+    Returns Multiscale Sample Entropy of the given data.
+    
+    Parameters
+    ----------
+    data: array_like
+        The signal  
+    m: int, optional
+        Size of the embedded vectors. By default 2.
+    l: int, optional
+        Lag beetwen elements of embedded vectors. By default 1.
+    r: float, optional
+        Tolerance. By default fr*std(data)
+    fr: float, optional
+        Fraction of std(data) used as tolerance. If r is passed, this
+        parameter is ignored. By default, 0.2.
+    
+    Returns
+    -------
+    float
+        The resulting value    
+    """
+    if not r:
+        r = fr * np.std(data)
+    
+    A = __countEmbeddedDistances(data, m+1, l, r)
+    B = __countEmbeddedDistances(data, m  , l, r)
+    
+    return -np.log(A/B) if A != 0 else float("inf")
+
+def __countEmbeddedDistances(data, m, l, r):
+    X = __getEmbeddedVectors(data , m, l)
+    
+    D = np.array([chebyshev(X[i], X[i+1]) for i in range(len(X)-1)])
+    
+    return np.sum(D < r)

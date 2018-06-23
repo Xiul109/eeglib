@@ -4,8 +4,8 @@
 
 import numpy as np
 
-from eeglib.features import (HFD,PFD, averageBandValues,hjorthActivity,
-                             hjorthMobility, hjorthComplexity,
+from eeglib.features import (HFD, PFD, averageBandValues, hjorthActivity,
+                             hjorthMobility, hjorthComplexity, MSE,
                              synchronizationLikelihood)
 from eeglib.preprocessing import bandPassFilter
 
@@ -72,7 +72,8 @@ class SampleWindow:
             nSamples X nchannels. If the given data is the inverse,
             columnMode should be True.
         """
-        if hasattr(samples, "__getitem__") and hasattr(samples[0], "__getitem__"):
+        if hasattr(samples, "__getitem__") \
+            and hasattr(samples[0], "__getitem__"):
             if((len(samples) == self.windowSize and
                 len(samples[0]) == self.channelNumber and not columnMode) 
                 or (len(samples) == self.channelNumber and
@@ -187,7 +188,7 @@ class EEG:
         It stores the data.
     """
 
-    def __init__(self, windowSize, sampleRate, channelNumber, windowFunction=None,names=None):
+    def __init__(self, windowSize, sampleRate, channelNumber, names=None):
         """
         Parameters
         ----------
@@ -197,12 +198,6 @@ class EEG:
             The number of samples per second
         channelNumber: int
             The number of channels of samples the window will handle.
-        windowFunction: String or numpy.ndarray, optional
-            This can be a String with the name of the function (currently only
-            supported **"hamming"**) or it can be a numpy array with a size
-            equals to the window size. ThIn the first case an array with the
-            size of windowSize will be created. The created array will be
-            multiplied by the data in the window whenever FFT is used.
         names: list of strings, optional
             The optional names that can be used to refer to each channel.
         """
@@ -210,20 +205,19 @@ class EEG:
         self.sampleRate = sampleRate
         self.channelNumber = channelNumber
         self.window = SampleWindow(windowSize, channelNumber,names=names)
-        self.__handleWindowFunction(windowFunction, windowSize)
 
     # Function to handle the windowFunction parameter
-    def __handleWindowFunction(self, windowFunction, windowSize):
+    def __handleWindowFunction(self, windowFunction):
         if windowFunction is None:
-            self.windowFunction = np.ones(windowSize)
+            return 1
         elif type(windowFunction) == str:
             if windowFunction is "hamming":
-                self.windowFunction = np.hamming(windowSize)
+                return np.hamming(self.windowSize)
             else:
                 raise ValueError("the option chosen is not valid")
         elif type(windowFunction) == np.ndarray:
-            if len(windowFunction) == windowSize:
-                self.windowFunction = windowFunction
+            if len(windowFunction) == self.windowSize:
+                return windowFunction
             else:
                 raise ValueError(
                     "the size of windowFunction is not the same as windowSize")
@@ -277,7 +271,7 @@ class EEG:
         else:
             return np.array([function(d) for d in data])
 
-    def getFourierTransform(self, i=None):
+    def getFourierTransform(self, i=None,  windowFunction=None):
         """
         Returns the Discrete Fourier Transform of the data at a given index of
         the window.
@@ -292,6 +286,13 @@ class EEG:
             * slice: a slice selecting the range of channels that will be
               used.
             * None: all the channels will be used
+        
+        windowFunction: String or numpy.ndarray, optional
+            This can be a String with the name of the function (currently only
+            supported **"hamming"**) or it can be a numpy array with a size
+            equals to the window size. In the first case an array with the
+            size of windowSize will be created. The created array will be
+            multiplied by the data in the window before FFT is used.
 
         Returns
         -------
@@ -299,11 +300,12 @@ class EEG:
             An array with the result of the Fourier Transform. If more than one
             channel was selected the array will be of 2 Dimensions.
         """
-        return self.__applyFunctionTo(np.fft.fft, i)
+        windowFunction=self.__handleWindowFunction(windowFunction)
+        return self.__applyFunctionTo(lambda x:np.fft.fft(x*windowFunction), i)
 
     # Gets the magnitude of each complex value resulting from a Fourier
     # Transform from a component i
-    def getMagnitudes(self, i=None):
+    def getMagnitudes(self, *args, **kargs):
         """
         Returns the magnitude of each complex value resulting from a Discrete
         Fourier Transform at a the given index of the window.
@@ -318,16 +320,23 @@ class EEG:
             * slice: a slice selecting the range of channels that will be
               used.
             * None: all the channels will be used
+            
+        windowFunction: String or numpy.ndarray, optional
+            This can be a String with the name of the function (currently only
+            supported **"hamming"**) or it can be a numpy array with a size
+            equals to the window size. In the first case an array with the
+            size of windowSize will be created. The created array will be
+            multiplied by the data in the window before FFT is used.
 
         Returns
         -------
         numpy.ndarray
-            An array with the magnitudes of the Fourier Transform. If more than one
-            channel was selected the array will be of 2 Dimensions.
+            An array with the magnitudes of the Fourier Transform. If more than
+            one channel was selected the array will be of 2 Dimensions.
         """
-        return abs(self.getFourierTransform(i))
+        return abs(self.getFourierTransform(*args,**kargs))
 
-    def getAverageBandValues(self, i=None, bands=defaultBands):
+    def getAverageBandValues(self, i=None, bands=defaultBands, *args, **kargs):
         """
         Returns the average magnitude of each band at the given index of the
         window
@@ -347,6 +356,13 @@ class EEG:
             This parameter is used to indicate the bands that are going to be
             used. It is a dict with the name of each band as key and a tuple
             with the lower and upper bounds as value.
+        
+        windowFunction: String or numpy.ndarray, optional
+            This can be a String with the name of the function (currently only
+            supported **"hamming"**) or it can be a numpy array with a size
+            equals to the window size. In the first case an array with the
+            size of windowSize will be created. The created array will be
+            multiplied by the data in the window before FFT is used.
 
         Returns
         -------
@@ -355,7 +371,7 @@ class EEG:
             the magnitudes. If more than one channel was selected the return
             object will be a list containing the dict for each channel selected
         """
-        magnitudes = self.getMagnitudes(i)
+        magnitudes = self.getMagnitudes(i,*args,**kargs)
         bands={key:self.getBoundsForBand(b) for key,b in bands.items()}
         if magnitudes.ndim==1:
             return averageBandValues(magnitudes,bands)
@@ -415,10 +431,10 @@ class EEG:
         """
         
         bandsSignals = {}
-        for key,data in bands.items():
-            bounds = self.getBoundsForBand(bands[key])
+        for key, band in bands.items():
+            bounds = self.getBoundsForBand(band)
             bandsSignals[key]=self.__applyFunctionTo(lambda x: 
-                bandPassFilter(x,self.sampleRate,bounds[0],bounds[1]),i)
+                bandPassFilter(x, self.sampleRate, bounds[0], bounds[1]), i)
 
         return bandsSignals
 
@@ -602,3 +618,34 @@ class EEG:
         alpha, beta, theta = np.mean(alphas), np.mean(betas), np.mean(thetas)
 
         return beta / (alpha + theta)
+    
+    def MSE(self, i, *args, **kargs):
+        """
+        Returns Multiscale Sample Entropy of the given data.
+        
+        Parameters
+        ----------
+        i: Variable type, optional
+            * int:  the index of the channel.
+            * str:  the name of the channel.
+            * list of strings and integers:  a list of channels that will be
+              used.
+            * slice: a slice selecting the range of channels that will be
+              used.
+            * None: all the channels will be   
+        m: int, optional
+            Size of the embedded vectors. By default 2.
+        l: int, optional
+            Lag beetwen elements of embedded vectors. By default 1.
+        r: float, optional
+            Tolerance. By default fr*std(data)
+        fr: float, optional
+            Fraction of std(data) used as tolerance. If r is passed, this
+            parameter is ignored. By default, 0.2.
+        
+        Returns
+        -------
+        float
+            The resulting value    
+        """
+        return self.__applyFunctionTo(lambda x: MSE(x,*args, **kargs), i)
