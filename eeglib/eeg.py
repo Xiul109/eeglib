@@ -5,7 +5,7 @@
 import numpy as np
 
 from eeglib.features import (HFD, PFD, averageBandValues, hjorthActivity,
-                             hjorthMobility, hjorthComplexity, MSE,
+                             hjorthMobility, hjorthComplexity, MSE, LZC,
                              synchronizationLikelihood)
 from eeglib.preprocessing import bandPassFilter
 
@@ -285,7 +285,7 @@ class EEG:
               used.
             * slice: a slice selecting the range of channels that will be
               used.
-            * None: all the channels will be used
+            * None: all the channels will be used.
         
         windowFunction: String or numpy.ndarray, optional
             This can be a String with the name of the function (currently only
@@ -319,7 +319,7 @@ class EEG:
               used.
             * slice: a slice selecting the range of channels that will be
               used.
-            * None: all the channels will be used
+            * None: all the channels will be used.
             
         windowFunction: String or numpy.ndarray, optional
             This can be a String with the name of the function (currently only
@@ -350,7 +350,7 @@ class EEG:
               used.
             * slice: a slice selecting the range of channels that will be
               used.
-            * None: all the channels will be used
+            * None: all the channels will be used.
 
         bands: dict, optional
             This parameter is used to indicate the bands that are going to be
@@ -413,7 +413,7 @@ class EEG:
               used.
             * slice: a slice selecting the range of channels that will be
               used.
-            * None: all the channels will be used
+            * None: all the channels will be used.
 
         bands: dict, optional
             This parameter is used to indicate the bands that are going to be
@@ -452,7 +452,7 @@ class EEG:
               used.
             * slice: a slice selecting the range of channels that will be
               used.
-            * None: all the channels will be 
+            * None: all the channels will be used.
 
         Returns
         -------
@@ -476,7 +476,7 @@ class EEG:
               used.
             * slice: a slice selecting the range of channels that will be
               used.
-            * None: all the channels will be 
+            * None: all the channels will be used.
         kmax: int, optional
             By default it will be windowSize//2.
 
@@ -519,7 +519,7 @@ class EEG:
               used.
             * slice: a slice selecting the range of channels that will be
               used.
-            * None: all the channels will be 
+            * None: all the channels will be used.
 
         Returns
         -------
@@ -543,7 +543,7 @@ class EEG:
               used.
             * slice: a slice selecting the range of channels that will be
               used.
-            * None: all the channels will be 
+            * None: all the channels will be used.
 
         Returns
         -------
@@ -621,7 +621,7 @@ class EEG:
     
     def MSE(self, i, *args, **kargs):
         """
-        Returns Multiscale Sample Entropy of the given data.
+        Returns Multiscale Sample Entropy at the given channel/s.
         
         Parameters
         ----------
@@ -632,7 +632,7 @@ class EEG:
               used.
             * slice: a slice selecting the range of channels that will be
               used.
-            * None: all the channels will be   
+            * None: all the channels will be used
         m: int, optional
             Size of the embedded vectors. By default 2.
         l: int, optional
@@ -649,3 +649,28 @@ class EEG:
             The resulting value    
         """
         return self.__applyFunctionTo(lambda x: MSE(x,*args, **kargs), i)
+    
+    def LZC(self, i, *args, **kargs):
+        """
+        Returns the Lempel-Ziv Complexity at the given channel/s.
+        
+        Parameters
+        ----------
+        i: Variable type, optional
+            * int:  the index of the channel.
+            * str:  the name of the channel.
+            * list of strings and integers:  a list of channels that will be
+              used.
+            * slice: a slice selecting the range of channels that will be
+              used.
+            * None: all the channels will be used
+        theshold: numeric, optional
+            A number use to binarize the signal. The values of the signal above
+            threshold will be converted to 1 and the rest to 0. By default, the 
+            median of the data.
+        normalize: bool
+            If True the resulting value will be between 0 and 1, being 0 the
+            minimal posible complexity of a sequence that has the same lenght of 
+            data and 1 the maximal posible complexity. By default, False.
+        """
+        return self.__applyFunctionTo(lambda x: LZC(x, *args, **kargs), i)

@@ -59,26 +59,28 @@ def HFD(data,kMax=None):
         signal
 
     kMax: int, optional
-        By default it will be windowSize//2.
+        By default it will be windowSize//4.
 
     Returns
     -------
     float
         The resulting value
     """
-    data=np.array(data)
+    #Inicializations
+    data=np.array(data) 
     N = len(data)
-    kMax = N // 2 if kMax is None else kMax
+    kMax = N // 4 if kMax is None else kMax     #Default kMax
     L = np.zeros(kMax-1)
     x = np.array((-np.log(np.arange(2,kMax+1)),np.ones(kMax-1))).transpose()
+    # Loop from 2 to kMax
     for k in range(2, kMax + 1):
         Lk = np.zeros(k)
+        #Loop for compute the lenght of Lmk
         for m in range(0, k):
             Lmk = 0            
             for i in range(1, (N - m) // k):
                 Lmk += abs(data[m + i * k] - data[m + i * k - k])
-            Lmk = Lmk * (N - 1) / (((N - m) // k) * k * k)
-            Lk[m]=Lmk
+            Lk[m]=Lmk * (N - 1) / (((N - m) // k) * k * k)
         Laux=np.mean(Lk)
         Laux=0.01/k if Laux==0 else Laux
         L[k-2]=np.log(Laux)
@@ -322,3 +324,67 @@ def __countEmbeddedDistances(data, m, l, r):
     D = np.array([chebyshev(X[i], X[i+1]) for i in range(len(X)-1)])
     
     return np.sum(D < r)
+
+# Lempel-Ziv Complexity
+def LZC(data, threshold = None, normalize = False):
+    """
+    Returns the Lempel-Ziv Complexity of the given data.
+    
+    Parameters
+    ----------
+    data: array_like
+        The signal.
+    theshold: numeric, optional
+        A number use to binarize the signal. The values of the signal above
+        threshold will be converted to 1 and the rest to 0. By default, the 
+        median of the data.
+    normalize: bool
+        If True the resulting value will be between 0 and 1, being 0 the
+        minimal posible complexity of a sequence that has the same lenght of 
+        data and 1 the maximal posible complexity. By default, False.
+    """
+    if not threshold:
+        threshold=np.median(data)
+    
+    sequence = __binarize(data, threshold)
+    
+    c = __LZC(sequence)
+    
+    if normalize:
+        size = len(data)
+        m = __minLZC(size)
+        M = __maxLZC(size)
+        c = (c - m) / (M - m)
+    
+    return c
+
+def __LZC(sequence):
+    subsequences = set()
+    subsequence  = []
+    for e in sequence:
+        subsequence.append(e)
+        if str(subsequence) not in subsequences:
+            subsequences.add(str(subsequence))
+            subsequence=[]
+            
+    return len(subsequences)
+
+def __minLZC(size):
+    return int((np.sqrt(1 + 8*size) - 1)/2)
+
+def __maxLZC(size):
+    v = 0
+    i = 1
+    n = 2
+    while n*i < size:
+        size-=n*i
+        v+=n
+        i += 1
+        n = 2**i
+    v += size // i
+    
+    return v
+
+def __binarize(data, threshold):
+    array = np.array(data)
+    return np.array(array > threshold, int)
