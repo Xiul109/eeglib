@@ -388,3 +388,53 @@ def __maxLZC(size):
 def __binarize(data, threshold):
     array = np.array(data)
     return np.array(array > threshold, int)
+
+
+# Detrended Fluctuation Analysis
+def DFA(data, fit_degree = 1, min_window_size = 4, max_window_size = None,
+        fskip = 1):
+    """
+    Applies Detrended Fluctuation Analysis algorithm to the given data.
+    
+    Parameters
+    ----------
+    data: array_like
+        The signal.
+    fit_degree: int, optional
+        Degree of the polynomial used to model de local trends. Default: 1.
+    min_window_size: int, optional
+        Size of the smallest window that will be used. Default: signalSize//2.
+    fskip: float, optional
+        Fraction of the window that will be skiped in each iteration for each
+        window size. Default: 1.
+    
+    Returns
+    -------
+    float
+        The resulting value
+    """
+    data = np.array(data)
+    size=len(data)
+        
+    if not max_window_size:
+        max_window_size = size//2
+        
+    Y = np.cumsum(data - np.mean(data))
+    
+    F = np.zeros(max_window_size - min_window_size)
+    
+    ns = np.arange(min_window_size, max_window_size)
+    
+    for n in ns:
+        itskip = int(fskip * n)
+        nWindows = int(np.ceil((size - n + 1) / itskip))
+        Fn = np.zeros(nWindows)
+        x = np.arange(n)
+        for i in range(0, nWindows):
+            y  = Y[i*n:i*n+n]
+            p  = np.polyfit(x, y, fit_degree)
+            yn = np.polyval(p, x)
+            Fn[i] = np.sqrt(np.sum((y-yn)**2)/n)
+        F[n-min_window_size] = np.mean(Fn)
+    
+    return np.polyfit(np.log(ns), np.log(F), 1)[0]

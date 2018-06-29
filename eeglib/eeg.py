@@ -4,8 +4,8 @@
 
 import numpy as np
 
-from eeglib.features import (HFD, PFD, averageBandValues, hjorthActivity,
-                             hjorthMobility, hjorthComplexity, MSE, LZC,
+from eeglib.features import (averageBandValues, hjorthActivity, hjorthMobility,
+                             hjorthComplexity, MSE, LZC, DFA, HFD, PFD,
                              synchronizationLikelihood)
 from eeglib.preprocessing import bandPassFilter
 
@@ -670,7 +670,36 @@ class EEG:
             median of the data.
         normalize: bool
             If True the resulting value will be between 0 and 1, being 0 the
-            minimal posible complexity of a sequence that has the same lenght of 
-            data and 1 the maximal posible complexity. By default, False.
+            minimal posible complexity of a sequence that has the same lenght 
+            of data and 1 the maximal posible complexity. By default, False.
         """
         return self.__applyFunctionTo(lambda x: LZC(x, *args, **kargs), i)
+    
+    def DFA(self, i, *args, **kargs):
+        """
+        Applies Detrended Fluctuation Analysis algorithm to the given data.
+        
+        Parameters
+        ----------
+         i: Variable type, optional
+            * int:  the index of the channel.
+            * str:  the name of the channel.
+            * list of strings and integers:  a list of channels that will be
+              used.
+            * slice: a slice selecting the range of channels that will be
+              used.
+            * None: all the channels will be used
+        fit_degree: int, optional
+            Degree of the polynomial used to model de local trends. Default: 1.
+        min_window_size: int, optional
+            Size of the smallest window that will be used. Default: signalSize//2.
+        fskip: float, optional
+            Fraction of the window that will be skiped in each iteration for each
+            window size. Default: 1.
+        
+        Returns
+        -------
+        float
+            The resulting value
+        """
+        return self.__applyFunctionTo(lambda x: DFA(x, *args, **kargs), i)
