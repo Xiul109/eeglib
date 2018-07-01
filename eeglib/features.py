@@ -438,3 +438,29 @@ def DFA(data, fit_degree = 1, min_window_size = 4, max_window_size = None,
         F[n-min_window_size] = np.mean(Fn)
     
     return np.polyfit(np.log(ns), np.log(F), 1)[0]
+
+# Cross Correlation Coeficient
+def CCC(c1, c2):
+    """
+    Computes the Cross Correlation Coeficient between the data in c1 and the 
+    data in c2.
+    
+    Parameters
+    ----------
+    c1: array_like
+        One of the signals
+    c2: array_like
+        The other signal
+    
+    Returns
+    -------
+    float
+        The Cross Correlation Coeficient.
+    """
+    meanC1 =  np.mean(c1)
+    meanC2 =  np.mean(c2)
+    
+    num = np.mean((c1 - meanC1)*(c2-meanC2))
+    den = np.sqrt(np.var(c1)*np.var(c2))
+    
+    return num/den if num != 0 else 0

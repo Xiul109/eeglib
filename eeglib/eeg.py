@@ -5,7 +5,7 @@
 import numpy as np
 
 from eeglib.features import (averageBandValues, hjorthActivity, hjorthMobility,
-                             hjorthComplexity, MSE, LZC, DFA, HFD, PFD,
+                             hjorthComplexity, MSE, LZC, DFA, HFD, PFD, CCC,
                              synchronizationLikelihood)
 from eeglib.preprocessing import bandPassFilter
 
@@ -692,10 +692,11 @@ class EEG:
         fit_degree: int, optional
             Degree of the polynomial used to model de local trends. Default: 1.
         min_window_size: int, optional
-            Size of the smallest window that will be used. Default: signalSize//2.
+            Size of the smallest window that will be used. Default: 
+            signalSize//2.
         fskip: float, optional
-            Fraction of the window that will be skiped in each iteration for each
-            window size. Default: 1.
+            Fraction of the window that will be skiped in each iteration for 
+            each window size. Default: 1.
         
         Returns
         -------
@@ -703,3 +704,23 @@ class EEG:
             The resulting value
         """
         return self.__applyFunctionTo(lambda x: DFA(x, *args, **kargs), i)
+    
+    def CCC(self, i1, i2):
+        """
+        Computes the Cross Correlation Coeficient between the data in c1 and
+        the data in c2.
+    
+        Parameters
+        ----------
+        i1: int or string
+            Index or name of the first channel.
+        i2: int or string
+            Index or name of the second channel.
+        
+        Returns
+        -------
+        float
+            The resulting value            
+        """
+        c1, c2 = self.getChannel(i1), self.getChannel(i2)
+        return CCC(c1, c2)

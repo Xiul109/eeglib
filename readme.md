@@ -13,6 +13,9 @@ This library was initialy a Final Degree Project and you can find the documentat
     * Synchronization Likelihood
     * Petrosian and Higuchi Fractal Dimensions
     * Hjorth Parameters
+    * Detrended Fluctuation Analysis
+    * Multiscale Sample Entropy
+    * Lempel-Ziv Complexity
 * Load data from CSV files
 * Works with windows
 * Flexible to use
