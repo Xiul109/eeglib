@@ -10,3 +10,4 @@ from . import eeg
 from . import helpers
 from . import features
 from . import preprocessing
+from . import auxFunctions

@@ -16,6 +16,7 @@ This library was initialy a Final Degree Project and you can find the documentat
     * Detrended Fluctuation Analysis
     * Multiscale Sample Entropy
     * Lempel-Ziv Complexity
+    * Cross Correlation Coeficient
 * Load data from CSV files
 * Works with windows
 * Flexible to use

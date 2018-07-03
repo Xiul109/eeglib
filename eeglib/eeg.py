@@ -4,10 +4,13 @@
 
 import numpy as np
 
+from itertools import permutations, combinations
+
 from eeglib.features import (averageBandValues, hjorthActivity, hjorthMobility,
                              hjorthComplexity, MSE, LZC, DFA, HFD, PFD, CCC,
                              synchronizationLikelihood)
 from eeglib.preprocessing import bandPassFilter
+from eeglib.auxFunctions import listType
 
 # Default bands ranges
 defaultBands = {"delta": (1, 4), "theta": (4, 7),
@@ -113,7 +116,8 @@ class SampleWindow:
         Returns
         -------
         numpy.ndarray
-            Can be a one or a two dimension matrix, depending of the parameters.
+            Can be a one or a two dimension matrix, depending of the
+            parameters.
         """
         if i is None:
             return self.window
@@ -121,19 +125,21 @@ class SampleWindow:
             if self.__names:
                 return self.__windowDict[i]
             else:
-                raise ValueError("There aren't names asociated to the channels.")
+                raise ValueError("There aren't names asociated to the \
+                                 channels.")
         elif type(i) is list:
             selectedChannels=np.zeros((len(i),256),dtype=np.float)
-            for c,e in enumerate(i):
-                if type(e) in [int,str]:
+            for c, e in enumerate(i):
+                if type(e) in [int, str]:
                     selectedChannels[c]=self.getChannel(e)
                 else:
-                    ValueError("The list can only contain int or strings.")
+                    raise ValueError("The list can only contain int and/or \
+                                     strings.")
             return selectedChannels
         elif type(i) in [int,slice]:
             return self.window[i]
         else:
-            raise ValueError("This methods only accepts int, str, list or" +
+            raise ValueError("This method only accepts int, str, list or" +
                              "slice types and not %s"%type(i))
 
     class SampleWindowIterator:
@@ -264,12 +270,83 @@ class EEG:
         """
         return self.window.getChannel(i)
     
-    def __applyFunctionTo(self,function,i=None):
+    def __applyFunctionTo(self, function, i=None):
         data=self.window.getChannel(i)
         if len(np.shape(data))==1:
             return function(data)
         else:
             return np.array([function(d) for d in data])
+    
+    def __applyFunctionTo2C(self, function, channels = None,
+                            allPermutations=False):
+        """
+        Applies a function that uses two signals by selecting the channels to
+        use. It will apply the function to different channels depending on the
+        parameters. Note: a single channel can be selected by using an int or
+        a string if a name for the channel was specified.
+        
+        Parameters
+        ----------
+        function: function
+            A function that receives two streams of data and will be applied to
+            the selected channels.
+            
+        channels: Variable type, optional
+            * tuple of lenght 2 containing channel indexes: applies the
+              function to the two channels specified by the tuple.
+            * list of tuples(same restrictions than the above): applies the
+              function to every tuple in the list.
+            * list of index: creates combinations of channels specifies in the
+              list depending of the allPermutations parameter.
+            * None: Are channels are used in the same way than in the list
+              above. This is the default value.
+        
+        allPermutations: bool, optional
+            Only used when channels is a list of index or None. If True all
+            permutations of the channels in every order are used; if False only
+            combinations of different channels are used. Example: with the list
+            [0, 2, 4] and allPermutations = True, the channels used will be
+            (0,2), (0,4), (2,0), (2,4), (4,0), (4,2); meanwhile, with
+            allPermutations = False, the channels used will be: (0,2), (0,4),
+            (2,4). Default: False.
+            
+        Returns
+        -------
+        If a tuple is passed the it returns the result of applying the function
+        to the channels specified in the tuple. If another valid value is
+        passed, the method returns a dictionary, being the key the two channels
+        used and the value the result of applying the function to those
+        channels.
+        """
+        permutate = permutations if allPermutations else combinations
+        
+        if channels == None:
+            channels = list(range(self.channelNumber))
+        
+        if type(channels) is tuple:
+            if len(channels) != 2:
+                raise ValueError("If you specify a tuple, it must have \
+                                 exactly two(2) elements")
+            else:
+                return function(*self.getChannel(list(channels)))
+        elif type(channels) is list:
+            t = listType(channels)
+            if t is tuple:
+                acs = np.array(channels)
+                if len(acs.shape) == 2 and acs.shape[1] == 2:
+                    return {c:function(*self.getChannel(list(c))) for c in 
+                            channels}
+                else:
+                    raise ValueError("The tuples of the list must have \
+                                     exactly two(2) elements")
+            else:
+                return {c:function(*self.getChannel(list(c))) for c in
+                        permutate(channels, 2)}
+        else:
+            raise ValueError("This method only accepts list (either of int\
+                              and str or tuples) or tuple types and not %s" %
+                             type(channels))
+                    
 
     def getFourierTransform(self, i=None,  windowFunction=None):
         """
@@ -554,18 +631,21 @@ class EEG:
         """
         return self.__applyFunctionTo(hjorthComplexity,i)
 
-    def synchronizationLikelihood(self, i1, i2, m=None, l=None,
-                                  w1=None, w2=None, pRef=0.05,**kargs):
+    def synchronizationLikelihood(self, channels = None, allPermutations=False,
+                                  m=None, l=None, w1=None, w2=None, pRef=0.05,
+                                  **kargs):
         """
         Returns the Synchronization Likelihood value applied over the i1 and i2
         channels by calling :func:`~eeglib.eeg.synchronizationLikelihood`.
 
         Parameters
         ----------
-        i1: int or string
-            Index or name of the first channel.
-        i2: int or string
-            Index or name of the second channel.
+        channels: Variable type, optional
+           In order to understand how this parameter works go to the doc of
+           :py:meth:`eeglib.eeg.EEG.__applyFunctionTo2C` 
+        allPermutations: bool, optional
+            In order to understand how this parameter works go to the doc of
+           :py:meth:`eeglib.eeg.EEG.__applyFunctionTo2C` 
         m: int, optional
             Numbers of elements of the embedded vectors.
         l: int, optional
@@ -585,7 +665,6 @@ class EEG:
         float
             The resulting value
         """
-        c1, c2 = self.getChannel(i1), self.getChannel(i2)
         if l == None:
             l=1
         if m==None:
@@ -595,7 +674,9 @@ class EEG:
             w1 = int(2 * l * (m - 1))
         if w2 == None:
             w2 = int(10 // pRef + w1)
-        return synchronizationLikelihood(c1, c2, m, l, w1, w2, pRef,**kargs)
+        return self.__applyFunctionTo2C(lambda c1,c2:synchronizationLikelihood(
+                                             c1,c2, m, l, w1, w2, pRef,**kargs)
+                                        ,channels, allPermutations)
 
     def engagementLevel(self):
         """
@@ -705,22 +786,24 @@ class EEG:
         """
         return self.__applyFunctionTo(lambda x: DFA(x, *args, **kargs), i)
     
-    def CCC(self, i1, i2):
+    def CCC(self, channels = None, allPermutations=False):
         """
         Computes the Cross Correlation Coeficient between the data in c1 and
         the data in c2.
     
         Parameters
         ----------
-        i1: int or string
-            Index or name of the first channel.
-        i2: int or string
-            Index or name of the second channel.
+        channels: Variable type, optional
+           In order to understand how this parameter works go to the doc of
+           :py:meth:`eeglib.eeg.EEG.__applyFunctionTo2C` 
+        allPermutations: bool, optional
+            In order to understand how this parameter works go to the doc of
+           :py:meth:`eeglib.eeg.EEG.__applyFunctionTo2C` 
         
         Returns
         -------
         float
             The resulting value            
         """
-        c1, c2 = self.getChannel(i1), self.getChannel(i2)
-        return CCC(c1, c2)
+#        c1, c2 = self.getChannel(i1), self.getChannel(i2)
+        return self.__applyFunctionTo2C(CCC, channels)
