@@ -1,8 +1,0 @@
-Documentation of eeglib.helpers module
-======================================
-
-.. inheritance-diagram:: eeglib.functions
-
-.. automodule:: eeglib.functions
-    :members:
-    :undoc-members:
