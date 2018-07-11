@@ -104,3 +104,26 @@ These preprocessings can be applied at the load of the data by the Helpers:
 helper = CSVHelper("fake_EEG_signal.csv",
         lowpass=30, highpass=1, normalize=True, ICA=True)
 ```
+
+## Using wrappers
+
+A Wrapper is an object that envelops a helper and simplifies the proccess of computing features that can be later be used, for example, in machine learning algorithms. The next example shows an example of how wrappers can be used:
+
+```python
+from eeglib import wrapper, helpers
+
+helper = helpers.CSVHelper("fake_EEG_signal.csv", windowSize=128)
+
+wrap = wrapper.Wrapper(helper)
+
+wrap.addFeature("HFD")
+wrap.addFeature("getFourierTransform")
+wrap.addFeature("synchronizationLikelihood")
+
+features=wrap.getAllFeatures()
+```
+So, the scheme to follow with wrappers is the next:
+1. Create the Helper object.
+2. Create the wrapper object.
+3. Select the desired features to compute. They can be parameterized by adding the parameters just behind the name.
+4. Call the method "getAllFeatures()" in order to compute every feature from every window at once or iterate over the Wrapper object for obtaining the features of each window. They are returned as a pandas.DataFrame or a pandas.Series.

@@ -17,10 +17,7 @@ from eeglib.preprocessing import bandPassFilter
 
 class Helper(metaclass=ABCMeta):
     """
-    This is an abstract class that defines the way every helper works. Before
-    performing any iteration over the data, the methods 
-    :meth:`~eeglib.helpers.Helper.prepareIterator` and 
-    :meth:`~eeglib.helpers.Helper.prepareEEG` should be called first.
+    This is an abstract class that defines the way every helper works.
     """
     
     def __init__(self,sampleRate=None, windowSize=None, highpass=None, 
@@ -193,7 +190,7 @@ class Iterator():
 
 class CSVHelper(Helper):
     """
-    This class is for appliying diferents operations using the EEG class over a
+    This class is for applying diferents operations using the EEG class over a
     csv file.
     """
     def __init__(self, path,*args, selectedColumns=None,**kargs):

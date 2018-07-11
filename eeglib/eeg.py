@@ -128,7 +128,7 @@ class SampleWindow:
                 raise ValueError("There aren't names asociated to the \
                                  channels.")
         elif type(i) is list:
-            selectedChannels=np.zeros((len(i),256),dtype=np.float)
+            selectedChannels=np.zeros((len(i),self.windowSize),dtype=np.float)
             for c, e in enumerate(i):
                 if type(e) in [int, str]:
                     selectedChannels[c]=self.getChannel(e)
@@ -578,8 +578,10 @@ class EEG:
 
         Returns
         -------
-        float
-            The resulting value
+        float or array
+            The resulting value. If more than one channe was selected the
+            return object will be a 1D array containing the result of the
+            procesing.
         """
         return self.__applyFunctionTo(hjorthActivity,i)
 
@@ -662,8 +664,12 @@ class EEG:
 
         Returns
         -------
-        float
-            The resulting value
+        float or dict
+            If a tuple is passed the it returns the result of applying the 
+            function to the channels specified in the tuple. If another valid 
+            value is passed, the method returns a dictionary, being the key the
+            two channels used and the value the result of applying the function
+            to those channels.
         """
         if l == None:
             l=1
@@ -726,8 +732,10 @@ class EEG:
         
         Returns
         -------
-        float
-            The resulting value    
+        float or array
+            The resulting value. If more than one channe was selected the
+            return object will be a 1D array containing the result of the
+            procesing. 
         """
         return self.__applyFunctionTo(lambda x: MSE(x,*args, **kargs), i)
     
@@ -753,6 +761,13 @@ class EEG:
             If True the resulting value will be between 0 and 1, being 0 the
             minimal posible complexity of a sequence that has the same lenght 
             of data and 1 the maximal posible complexity. By default, False.
+        
+        Returns
+        -------
+        float or array
+            The resulting value. If more than one channe was selected the
+            return object will be a 1D array containing the result of the
+            procesing.
         """
         return self.__applyFunctionTo(lambda x: LZC(x, *args, **kargs), i)
     
@@ -781,8 +796,10 @@ class EEG:
         
         Returns
         -------
-        float
-            The resulting value
+        float or array
+            The resulting value. If more than one channe was selected the
+            return object will be a 1D array containing the result of the
+            procesing.
         """
         return self.__applyFunctionTo(lambda x: DFA(x, *args, **kargs), i)
     
@@ -802,8 +819,12 @@ class EEG:
         
         Returns
         -------
-        float
-            The resulting value            
+        float or dict
+            If a tuple is passed the it returns the result of applying the 
+            function to the channels specified in the tuple. If another valid 
+            value is passed, the method returns a dictionary, being the key the
+            two channels used and the value the result of applying the function
+            to those channels.           
         """
 #        c1, c2 = self.getChannel(i1), self.getChannel(i2)
         return self.__applyFunctionTo2C(CCC, channels)
