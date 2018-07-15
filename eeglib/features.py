@@ -287,7 +287,7 @@ def hjorthComplexity(data):
 
 
 # Sample Entropy
-def MSE(data, m = 2, l = 1, r = None, fr = 0.2):
+def MSE(data, m = 2, l = 1, r = None, fr = 0.2, eps = 10e-2):
     """
     Returns Multiscale Sample Entropy of the given data.
     
@@ -304,6 +304,9 @@ def MSE(data, m = 2, l = 1, r = None, fr = 0.2):
     fr: float, optional
         Fraction of std(data) used as tolerance. If r is passed, this
         parameter is ignored. By default, 0.2.
+    eps: float, optional
+        Small number added to avoid infinite results. If 0 infinite results can
+        appear. Default: 10e-2.
     
     Returns
     -------
@@ -313,8 +316,8 @@ def MSE(data, m = 2, l = 1, r = None, fr = 0.2):
     if not r:
         r = fr * np.std(data)
     
-    A = __countEmbeddedDistances(data, m+1, l, r)
-    B = __countEmbeddedDistances(data, m  , l, r)
+    A = __countEmbeddedDistances(data, m+1, l, r) + eps
+    B = __countEmbeddedDistances(data, m  , l, r) + eps
     
     return -np.log(A/B) if A != 0 else float("inf")
 
@@ -324,6 +327,7 @@ def __countEmbeddedDistances(data, m, l, r):
     D = np.array([chebyshev(X[i], X[i+1]) for i in range(len(X)-1)])
     
     return np.sum(D < r)
+
 
 # Lempel-Ziv Complexity
 def LZC(data, threshold = None, normalize = False):
