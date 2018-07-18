@@ -27,17 +27,17 @@ def bandPassFilter(data,sampleRate=None,highpass=None,lowpass=None):
     size=len(data)
     if not sampleRate:
         sampleRate=size
+
+    if highpass:
+        highpassP=int(highpass*size/sampleRate)
+        highpassN=-highpassP
     else:
-        if highpass:
-            highpassP=int(highpass*size/sampleRate)
-            highpassN=-highpassP
-        else:
-            highpassP=highpassN=None
-        if lowpass:
-            lowpassP=int(lowpass*size/sampleRate)
-            lowpassN=-lowpassP
-        else:
-            lowpassP=lowpassN=None
+        highpassP=highpassN=None
+    if lowpass:
+        lowpassP=int(lowpass*size/sampleRate)
+        lowpassN=-lowpassP
+    else:
+        lowpassP=lowpassN=size//2
             
     fft=np.fft.fft(data)
     
