@@ -7,6 +7,8 @@ data stream. Currently there is support only for CSV files.
 from abc import ABCMeta
 
 import csv
+from pyedflib import EdfReader
+
 import numpy as np
 from scipy.stats import zscore
 from sklearn.decomposition import FastICA
@@ -20,14 +22,11 @@ class Helper(metaclass=ABCMeta):
     This is an abstract class that defines the way every helper works.
     """
     
-    def __init__(self,sampleRate=None, windowSize=None, highpass=None, 
+    def __init__(self, windowSize=None, highpass=None, 
                  lowpass=None, normalize=False, ICA=False):
         """
         Parameters
         ----------
-        sampleRate: numeric, optional
-            The frequency at which the data was recorded. By default its value
-            is the lenght of the data.
         windowSize: int, optional
             The size of the window in which the calculations will be done. By
             default its value is the lenght of the data.
@@ -45,11 +44,6 @@ class Helper(metaclass=ABCMeta):
         self.startPoint = 0
         self.endPoint = self.nSamples
         self.step=None
-        
-        if not sampleRate:
-            self.sampleRate=self.nSamples
-        else:
-            self.sampleRate=sampleRate
        
         if not windowSize:
             windowSize=self.sampleRate
@@ -193,7 +187,8 @@ class CSVHelper(Helper):
     This class is for applying diferents operations using the EEG class over a
     csv file.
     """
-    def __init__(self, path,*args, selectedColumns=None,**kargs):
+    def __init__(self, path, *args, sampleRate=None, selectedSignals=None,
+                 **kargs):
         """
         The rest of parameters can be seen at :meth:`Helper.__init__`
         
@@ -201,6 +196,9 @@ class CSVHelper(Helper):
         ----------
         path: str
             The path to the csv file
+        sampleRate: numeric, optional
+            The frequency at which the data was recorded. By default its value
+            is the lenght of the data.
         selectedFields: list of strings or ints
             If the data file has names asociated to each columns, those columns
             can be selected through the name or the index of the column. If the
@@ -218,16 +216,64 @@ class CSVHelper(Helper):
             l1=list(map(lambda x: float(x),l1))
             for value,column in zip(l1,self.data):
                 column.insert(0,value)
-            self.names=None
+            self.names = [str(i) for i in range(len(l1))]
         except ValueError:
             self.names=l1
-        if selectedColumns:
-            for i,column in enumerate(selectedColumns):
-                if type(selectedColumns[i]) is str:
-                    selectedColumns[i]=self.names.index(column)
-            self.names=[self.names[i] for i in selectedColumns]
-            self.data=[self.data[i] for i in selectedColumns]
+        if selectedSignals:
+            for i,column in enumerate(selectedSignals):
+                if type(selectedSignals[i]) is str:
+                    selectedSignals[i]=self.names.index(column)
+            self.names=[self.names[i] for i in selectedSignals]
+            self.data=[self.data[i] for i in selectedSignals]
         
+        self.data=np.array(self.data)
+        
+        if not sampleRate:
+            self.sampleRate=len(self.data[0])
+        else:
+            self.sampleRate=sampleRate
+        
+        super().__init__(*args,**kargs)
+        
+
+class EDFHelper(Helper):
+    """
+    This class is for applying diferents operations using the EEG class over an
+    edf file.
+    """
+    def __init__(self, path,*args, selectedSignals=None,**kargs):
+        """
+        The rest of parameters can be seen at :meth:`Helper.__init__`
+        
+        Parameters
+        ----------
+        path: str
+            The path to the edf file
+        selectedFields: list of strings or ints
+            If the data file has names asociated to each columns, those columns
+            can be selected through the name or the index of the column. If the
+            data file hasn't names in the columns, they can be selected just by
+            the index.
+        """
+        reader = EdfReader(path)
+        
+        ns = reader.signals_in_file
+        
+        self.data  = [reader.readSignal(i) for i in range(ns)]
+        self.names = reader.getSignalLabels()
+        frequencies = reader.getSampleFrequencies()
+        
+        if selectedSignals: 
+            for i, label in enumerate(selectedSignals):
+                if type(label) is str:
+                    selectedSignals[i]=self.names.index(label)
+            self.names  = [self.names[i]  for i in selectedSignals]
+            self.data   = [self.data[i]   for i in selectedSignals]
+            frequencies = [frequencies[i] for i in selectedSignals]
+        
+        self.sampleRate = frequencies[0]
+        if not all(frequencies==self.sampleRate):
+            raise ValueError("All channels must have the same frequency.")
         self.data=np.array(self.data)
         
         super().__init__(*args,**kargs)
