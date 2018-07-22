@@ -109,7 +109,7 @@ class Helper(metaclass=ABCMeta):
             self.endPoint = endPoint
         if step:
             self.step = int(step)
-        return self.__iter__()
+        return self
 
 
     def prepareEEG(self, windowSize):
@@ -163,6 +163,23 @@ class Helper(metaclass=ABCMeta):
         EEG
         """
         return self.eeg
+    
+    def getNames(self, indexes=None):
+        """
+        Returns the names of the specified indexes of channels.
+        
+        Parameters
+        ----------
+        indexes: Iterable of int, optional.
+            The indexes of the channels desired. If None it will return all the
+            channels' names. Default: None.
+        """
+        if indexes:
+            names = [self.names[i] for i in indexes]
+        else:
+            names = self.names
+            
+        return names
 
 class Iterator():
     def __init__(self, helper,step,auxPoint, endPoint):

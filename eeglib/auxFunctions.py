@@ -22,20 +22,20 @@ def listType(l):
     return t
 
 
-def flat(value, name):
+def flatData(data, name):
     """
     Transforms the parameter value into a flatten dictionary, using the
     parameter name as a prefix for the dictionary keys. 
          
     """
     res={}
-    if type(value) is dict:
-        for key, val in value.items():
-            res.update(flat(val, name + "_"+str(key)))
-    elif hasattr(value, "__iter__"):   
-        for i, val in enumerate(value):
-            res.update(flat(val, name+"_%d"%i))
+    if type(data) is dict:
+        for key, val in data.items():
+            res.update(flatData(val, name + "_"+str(key)))
+    elif hasattr(data, "__iter__"):   
+        for i, val in enumerate(data):
+            res.update(flatData(val, name+"_%d"%i))
     else:
-        res = {name:value}
+        res = {name:data}
     
     return res

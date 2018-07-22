@@ -1,5 +1,5 @@
 import pandas as pd
-from eeglib.auxFunctions import flat
+from eeglib.auxFunctions import flatData
 
 class Wrapper():
     """
@@ -18,13 +18,17 @@ class Wrapper():
             If True the result of calling getFeatures() will be a one 
             dimensional sequence of data. If False, the return value will be
             a list containing the result of each feature, that can be a float,
-            a dict or an array.
+            a dict or an array. Default: True.
+        store: Bool
+            If True, the data will be stored in a self.storedFeatures. Default:
+            True.
         """
         self.helper = helper
         self.functions = {}
         self.flat = flat
         self.store = store
-        self.currentStored = False
+        self.iterator = iter(self.helper)
+        self.lastStored = -1
         if store:
             self.storedFeatures = []
             
@@ -35,7 +39,6 @@ class Wrapper():
     
     def __next__(self):
         next(self.iterator)
-        self.currentStored = False
         return self.getFeatures()
 
     def addFeature(self, name, *args, **kargs):
@@ -64,25 +67,33 @@ class Wrapper():
         return self.functions.keys()
     
     
-    def getFeatures(self):
+    def getFeatures(self, flat=None):
         """
         Returns the features in the current window of the helper iterator.
+        
+        Parameters
+        ----------
+        flat: Boolean, optional
+            Used to force the data to be flatten or not. If None it will apply
+            the value specified in the constructor. Default: None
         
         Returns
         -------
         pandas.Series
         """
-        
-        if self.currentStored:
-            return self.storedFeatures[-1]
-        
-        features = {name:f() for name, f in self.functions.items()}
-        if self.flat:
-            features = flat(features,"")
-        
-        if self.store:
-            self.storedFeatures.append(features)
-            self.currentStored = True
+        if self.lastStored == self.iterator.auxPoint:
+            features = self.storedFeatures[-1]
+        else:
+            if not flat:
+                flat = self.flat
+            
+            features = {name:f() for name, f in self.functions.items()}
+            if self.flat:
+                features = flatData(features,"")
+            
+            if self.store:
+                self.storedFeatures.append(features)
+                self.lastStored = self.iterator.auxPoint
         
         return pd.Series(features)
 
@@ -95,4 +106,7 @@ class Wrapper():
         -------
         pandas.DataFrame
         """
-        return pd.DataFrame([features for features in self])
+        data=[features for features in self]
+        if self.store:
+            data=self.storedFeatures+data
+        return pd.DataFrame(data)
