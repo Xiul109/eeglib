@@ -44,6 +44,7 @@ class Helper(metaclass=ABCMeta):
         self.startPoint = 0
         self.endPoint = self.nSamples
         self.step=None
+        self.iterator = None
        
         if not windowSize:
             windowSize=self.sampleRate
@@ -62,7 +63,7 @@ class Helper(metaclass=ABCMeta):
             self.data=ica.fit_transform(self.data.transpose()).transpose()
     
     def __iter__(self):
-        return Iterator(self,self.step,self.startPoint,self.endPoint)
+        return self._getIterator()
 
     def __len__(self):
         return self.nSamples
@@ -84,6 +85,12 @@ class Helper(metaclass=ABCMeta):
         if type(i) is not slice:
             raise ValueError("only slices can be used.")
         return self.prepareIterator(i.step, i.start, i.stop)
+    
+    def _getIterator(self):
+        if not self.iterator:
+            self.iterator = Iterator(self,self.step,self.startPoint,self.endPoint)
+            
+        return self.iterator
 
     def prepareIterator(self, step=None, startPoint=0, endPoint=None):
         """
