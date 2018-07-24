@@ -97,6 +97,13 @@ class Wrapper():
         
         return pd.Series(features)
 
+    def getStoredFeatures(self):
+        """
+        Returns the stored features if store was set to True, else it will
+        return None.
+        """
+        if self.store:
+            return pd.DataFrame(self.storedFeatures)
         
     def getAllFeatures(self):
         """
