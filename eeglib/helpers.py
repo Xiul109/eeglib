@@ -88,7 +88,9 @@ class Helper(metaclass=ABCMeta):
     
     def _getIterator(self):
         if not self.iterator:
-            self.iterator = Iterator(self,self.step,self.startPoint,self.endPoint)
+            self.iterator = Iterator(self, self.step,
+                                     self.startPoint,
+                                     self.endPoint)
             
         return self.iterator
 
@@ -116,6 +118,9 @@ class Helper(metaclass=ABCMeta):
             self.endPoint = endPoint
         if step:
             self.step = int(step)
+        
+        self.iterator = Iterator(self,self.step,self.startPoint,self.endPoint)
+        
         return self
 
 

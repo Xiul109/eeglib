@@ -117,3 +117,6 @@ class Wrapper():
         if self.store:
             data=self.storedFeatures+data
         return pd.DataFrame(data)
+    
+    def reset(self):
+        self.iterator = iter(self.helper)
