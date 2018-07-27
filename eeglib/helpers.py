@@ -23,7 +23,8 @@ class Helper(metaclass=ABCMeta):
     """
     
     def __init__(self, windowSize=None, highpass=None, 
-                 lowpass=None, normalize=False, ICA=False):
+                 lowpass=None, normalize=False, ICA=False,
+                 selectedSignals=None):
         """
         Parameters
         ----------
@@ -39,6 +40,9 @@ class Helper(metaclass=ABCMeta):
         ICA: boolean, optional
             If True, Independent Component Analysis will be applied to the data
         """
+        if selectedSignals:
+            self.selectSignals(selectedSignals)
+        
         self.nChannels = len(self.data)
         self.nSamples = len(self.data[0])
         self.startPoint = 0
@@ -47,9 +51,11 @@ class Helper(metaclass=ABCMeta):
         self.iterator = None
        
         if not windowSize:
-            windowSize=self.sampleRate
+            self.windowSize = self.sampleRate
+        else:
+            self.windowSize = windowSize
             
-        self.prepareEEG(windowSize)
+        self.prepareEEG(self.windowSize)
         
         if lowpass or highpass:
             for i,channel in enumerate(self.data):
@@ -139,6 +145,7 @@ class Helper(metaclass=ABCMeta):
         -------
         EEG
         """
+        self.windowSize = windowSize
         self.eeg = EEG(windowSize, self.sampleRate, self.nChannels,
                        names=self.names)
         if not self.step:
@@ -192,6 +199,17 @@ class Helper(metaclass=ABCMeta):
             names = self.names
             
         return names
+    
+    def selectSignals(self, selectedSignals):
+        for i, column in enumerate(selectedSignals):
+            if type(selectedSignals[i]) is str:
+                selectedSignals[i]=self.names.index(column)
+        
+        self.names=[self.names[i] for i in selectedSignals]
+        self.data=np.array([self.data[i] for i in selectedSignals])
+        self.nChannels = len(self.names)
+        
+        self.prepareEEG(self.windowSize)
 
 class Iterator():
     def __init__(self, helper,step,auxPoint, endPoint):
@@ -216,8 +234,7 @@ class CSVHelper(Helper):
     This class is for applying diferents operations using the EEG class over a
     csv file.
     """
-    def __init__(self, path, *args, sampleRate=None, selectedSignals=None,
-                 **kargs):
+    def __init__(self, path, *args, sampleRate=None, **kargs):
         """
         The rest of parameters can be seen at :meth:`Helper.__init__`
         
@@ -248,12 +265,6 @@ class CSVHelper(Helper):
             self.names = [str(i) for i in range(len(l1))]
         except ValueError:
             self.names=l1
-        if selectedSignals:
-            for i,column in enumerate(selectedSignals):
-                if type(selectedSignals[i]) is str:
-                    selectedSignals[i]=self.names.index(column)
-            self.names=[self.names[i] for i in selectedSignals]
-            self.data=[self.data[i] for i in selectedSignals]
         
         self.data=np.array(self.data)
         
@@ -270,7 +281,7 @@ class EDFHelper(Helper):
     This class is for applying diferents operations using the EEG class over an
     edf file.
     """
-    def __init__(self, path,*args, selectedSignals=None,**kargs):
+    def __init__(self, path, *args, **kargs):
         """
         The rest of parameters can be seen at :meth:`Helper.__init__`
         
@@ -291,14 +302,6 @@ class EDFHelper(Helper):
         self.data  = [reader.readSignal(i) for i in range(ns)]
         self.names = reader.getSignalLabels()
         frequencies = reader.getSampleFrequencies()
-        
-        if selectedSignals: 
-            for i, label in enumerate(selectedSignals):
-                if type(label) is str:
-                    selectedSignals[i]=self.names.index(label)
-            self.names  = [self.names[i]  for i in selectedSignals]
-            self.data   = [self.data[i]   for i in selectedSignals]
-            frequencies = [frequencies[i] for i in selectedSignals]
         
         self.sampleRate = frequencies[0]
         if not all(frequencies==self.sampleRate):
