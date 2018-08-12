@@ -36,9 +36,17 @@ class Helper(metaclass=ABCMeta):
         lowpass: numeric, optional
             The signal will be filtered bellow this value.
         normalize: boolean, optional
-            If True, the data will be normalizing using z-scores.
+            If True, the data will be normalizing using z-scores. Default =
+            False.
         ICA: boolean, optional
             If True, Independent Component Analysis will be applied to the data
+            . It is applied always after normalization if normalize = True.
+            Default: False.
+        selectedSignals: list of strings or ints
+            If the data file has names asociated to each columns, those columns
+            can be selected through the name or the index of the column. If the
+            data file hasn't names in the columns, they can be selected just by
+            the index.
         """
         if selectedSignals:
             self.selectSignals(selectedSignals)
@@ -62,11 +70,13 @@ class Helper(metaclass=ABCMeta):
                 self.data[i]=bandPassFilter(channel,self.sampleRate,highpass,
                          lowpass)
         
-        if normalize:
-            self.data=zscore(self.data,axis=1)
         if ICA:
             ica=FastICA()
             self.data=ica.fit_transform(self.data.transpose()).transpose()
+            self.names = [str(i) for i in range(len(self.nChannels))]
+        
+        if normalize:
+            self.data=zscore(self.data,axis=1)
     
     def __iter__(self):
         return self._getIterator()
@@ -245,11 +255,6 @@ class CSVHelper(Helper):
         sampleRate: numeric, optional
             The frequency at which the data was recorded. By default its value
             is the lenght of the data.
-        selectedFields: list of strings or ints
-            If the data file has names asociated to each columns, those columns
-            can be selected through the name or the index of the column. If the
-            data file hasn't names in the columns, they can be selected just by
-            the index.
         """
         with open(path) as file:
             reader=csv.reader(file)
@@ -289,11 +294,6 @@ class EDFHelper(Helper):
         ----------
         path: str
             The path to the edf file
-        selectedFields: list of strings or ints
-            If the data file has names asociated to each columns, those columns
-            can be selected through the name or the index of the column. If the
-            data file hasn't names in the columns, they can be selected just by
-            the index.
         """
         reader = EdfReader(path)
         
