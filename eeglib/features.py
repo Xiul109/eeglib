@@ -330,7 +330,7 @@ def __countEmbeddedDistances(data, m, l, r):
 
 
 # Lempel-Ziv Complexity
-def LZC(data, threshold = None, normalize = False):
+def LZC(data, threshold = None):
     """
     Returns the Lempel-Ziv Complexity of the given data.
     
@@ -342,10 +342,6 @@ def LZC(data, threshold = None, normalize = False):
         A number use to binarize the signal. The values of the signal above
         threshold will be converted to 1 and the rest to 0. By default, the 
         median of the data.
-    normalize: bool
-        If True the resulting value will be between 0 and 1, being 0 the
-        minimal posible complexity of a sequence that has the same lenght of 
-        data and 1 the maximal posible complexity. By default, False.
     """
     if not threshold:
         threshold=np.median(data)
@@ -354,13 +350,11 @@ def LZC(data, threshold = None, normalize = False):
     
     c = __LZC(sequence)
     
-    if normalize:
-        size = len(data)
-        m = __minLZC(size)
-        M = __maxLZC(size)
-        c = (c - m) / (M - m)
+ 
+    n = len(data)
+    lzc = c*(np.log2(c)+1)/n
     
-    return c
+    return lzc
 
 def __LZC(sequence):
     subsequences = set()
@@ -373,21 +367,21 @@ def __LZC(sequence):
             
     return len(subsequences)
 
-def __minLZC(size):
-    return int((np.sqrt(1 + 8*size) - 1)/2)
-
-def __maxLZC(size):
-    v = 0
-    i = 1
-    n = 2
-    while n*i < size:
-        size-=n*i
-        v+=n
-        i += 1
-        n = 2**i
-    v += size // i
-    
-    return v
+#def __minLZC(size):
+#    return int((np.sqrt(1 + 8*size) - 1)/2)
+#
+#def __maxLZC(size):
+#    v = 0
+#    i = 1
+#    n = 2
+#    while n*i < size:
+#        size-=n*i
+#        v+=n
+#        i += 1
+#        n = 2**i
+#    v += size // i
+#    
+#    return v
 
 def __binarize(data, threshold):
     array = np.array(data)
