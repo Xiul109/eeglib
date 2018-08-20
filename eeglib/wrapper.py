@@ -7,7 +7,7 @@ class Wrapper():
     once. The main usage of this class if for generating features to use with
     machine learning techniques.
     """
-    def __init__(self, helper, flat = True, store=True):
+    def __init__(self, helper, flat = True, store=True, label = None):
         """
         Parameters
         ----------
@@ -22,6 +22,9 @@ class Wrapper():
         store: Bool
             If True, the data will be stored in a self.storedFeatures. Default:
             True.
+        label: object, optional
+            This value will be added as a field in the data except if it is
+            None. Default: None.
         """
         self.helper = helper
         self.functions = {}
@@ -29,6 +32,7 @@ class Wrapper():
         self.store = store
         self.iterator = iter(self.helper)
         self.lastStored = -1
+        self.label = label
         if store:
             self.storedFeatures = []
             
@@ -90,6 +94,9 @@ class Wrapper():
             features = {name:f() for name, f in self.functions.items()}
             if self.flat:
                 features = flatData(features,"")
+            
+            if self.label is not None:
+                features["label"] = self.label
             
             if self.store:
                 self.storedFeatures.append(features)

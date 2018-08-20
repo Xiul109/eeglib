@@ -5,6 +5,7 @@ This module contains helper classes that are useful to iterating over a EEG
 data stream. Currently there is support only for CSV files.
 """
 from abc import ABCMeta
+import datetime
 
 import csv
 from pyedflib import EdfReader
@@ -57,6 +58,7 @@ class Helper(metaclass=ABCMeta):
         self.endPoint = self.nSamples
         self.step=None
         self.iterator = None
+        self.duration = self.nSamples/self.sampleRate
        
         if not windowSize:
             self.windowSize = self.sampleRate
@@ -109,6 +111,40 @@ class Helper(metaclass=ABCMeta):
                                      self.endPoint)
             
         return self.iterator
+    
+    def _handleIndex(self, index, step=False):
+        if type(index) is int:
+            if index<0 and not step:
+                index = self.nSamples+index
+        
+        elif type(index) is str:
+            neg = index[0]=="-"
+            
+            if neg:
+                index = index.replace("-","")
+            
+            index = index.split(":")
+            nComponents = len(index)
+            
+            if 0 < nComponents < 4:
+                totalSecs = 0
+                for i in range(nComponents):
+                    totalSecs+=float(index[-(i+1)])*60**i
+                index = int(totalSecs*self.sampleRate)
+                
+                if neg:
+                    index = self.nSamples-index
+                
+            else: 
+                raise ValueError("Wrong value for the index")
+                
+        elif type(index) is datetime.timedelta:
+            index = int(self.sampleRate*index.total_seconds())
+            
+        else:
+            raise ValueError("A index can only be a int or a str.")
+            
+        return index
 
     def prepareIterator(self, step=None, startPoint=0, endPoint=None):
         """
@@ -129,11 +165,11 @@ class Helper(metaclass=ABCMeta):
             raise Exception("prepareEEG method must be called before \
                             prepareIterator.")
         if startPoint:
-            self.startPoint=startPoint
+            self.startPoint=self._handleIndex(startPoint)
         if endPoint:
-            self.endPoint = endPoint
+            self.endPoint = self._handleIndex(endPoint)
         if step:
-            self.step = int(step)
+            self.step = self._handleIndex(step, step=True)
         
         self.iterator = Iterator(self,self.step,self.startPoint,self.endPoint)
         
