@@ -219,7 +219,8 @@ class Helper(metaclass=ABCMeta):
         self.data=np.array([self.data[i] for i in selectedSignals])
         self.nChannels = len(self.names)
         
-        self.prepareEEG(self.windowSize)
+        if hasattr(self, "windowSize"):
+            self.prepareEEG(self.windowSize)
 
 class Iterator():
     def __init__(self, helper,step,auxPoint, endPoint):

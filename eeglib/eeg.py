@@ -706,7 +706,7 @@ class EEG:
 
         return beta / (alpha + theta)
     
-    def MSE(self, i, *args, **kargs):
+    def MSE(self, i=None, *args, **kargs):
         """
         Returns Multiscale Sample Entropy at the given channel/s.
         
@@ -739,7 +739,7 @@ class EEG:
         """
         return self.__applyFunctionTo(lambda x: MSE(x,*args, **kargs), i)
     
-    def LZC(self, i, *args, **kargs):
+    def LZC(self, i=None, *args, **kargs):
         """
         Returns the Lempel-Ziv Complexity at the given channel/s.
         
@@ -771,7 +771,7 @@ class EEG:
         """
         return self.__applyFunctionTo(lambda x: LZC(x, *args, **kargs), i)
     
-    def DFA(self, i, *args, **kargs):
+    def DFA(self, i=None, *args, **kargs):
         """
         Applies Detrended Fluctuation Analysis algorithm to the given data.
         

@@ -401,7 +401,9 @@ def DFA(data, fit_degree = 1, min_window_size = 4, max_window_size = None,
     fit_degree: int, optional
         Degree of the polynomial used to model de local trends. Default: 1.
     min_window_size: int, optional
-        Size of the smallest window that will be used. Default: signalSize//2.
+        Size of the smallest window that will be used. Default: 4.
+    man_window_size: int, optional
+        Size of the smallest window that will be used. Default: signalSize//2
     fskip: float, optional
         Fraction of the window that will be skiped in each iteration for each
         window size. Default: 1.
