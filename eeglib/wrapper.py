@@ -7,7 +7,8 @@ class Wrapper():
     once. The main usage of this class if for generating features to use with
     machine learning techniques.
     """
-    def __init__(self, helper, flat = True, store=True, label = None):
+    def __init__(self, helper, flat = True, store=True, label = None,
+                 segmentation = None):
         """
         Parameters
         ----------
@@ -25,17 +26,36 @@ class Wrapper():
         label: object, optional
             This value will be added as a field in the data except if it is
             None. Default: None.
+        segmentation: dict of tuples, optional
+            Parameter format [((begin, end),label), ]; begin is the begin of
+            the segment, end is the end of the segment and label the label
+            realed to that segment. Begin and end can be either an int, a str
+            or a datetime.timedelta, being the same that the parameter of
+            :py:meth:`eeglib.helpers.Helper.moveEEGWindow`. The label of the
+            unlabelled segments will be 0. If None, no segmentation will be 
+            added. Default: None.
         """
         self.helper = helper
-        self.functions = {}
-        self.flat = flat
-        self.store = store
         self.iterator = iter(self.helper)
+        
+        self.functions = {}
+        
+        self.flat = flat
+        
+        self.store = store
         self.lastStored = -1
-        self.label = label
         if store:
             self.storedFeatures = []
-            
+        
+        self.label = label
+        if segmentation:
+            self.segmentation = [((self.helper._handleIndex(s0), 
+                                   self.helper._handleIndex(se)), label) 
+                                 for (s0, se), label in segmentation]
+            self.segmentation = sorted(self.segmentation)
+            self.segmentationIndex = 0
+        else:
+            self.segmentation = None
     
     def __iter__(self):
         self.iterator = iter(self.helper)
@@ -44,6 +64,17 @@ class Wrapper():
     def __next__(self):
         next(self.iterator)
         return self.getFeatures()
+    
+    def addFeatures(self, features):
+        """
+        Parameters
+        ----------
+        features: list(tuple(str,list, dict))
+            A list containing tuples that represent the parameters needed to
+            add a single feature.
+        """
+        for f in features:
+            self.addFeature(f[0],*f[1],**f[2])
 
     def addFeature(self, name, *args, **kargs):
         """
@@ -94,6 +125,21 @@ class Wrapper():
             features = {name:f() for name, f in self.functions.items()}
             if self.flat:
                 features = flatData(features,"")
+            
+            features["segment_label"] = 0
+            if self.segmentation:
+                loop = True
+                self.segmentationIndex
+                while loop and self.segmentationIndex < len(self.segmentation):
+                    curSeg, curLab = self.segmentation[self.segmentationIndex]
+                    curPoint = self.iterator.auxPoint - self.iterator.step
+                    if curSeg[0] <= curPoint < curSeg[1]:
+                        features["segment_label"] = curLab
+                        loop = False
+                    elif curPoint <curSeg[0]:
+                        loop = False
+                    else:
+                        self.segmentationIndex+=1
             
             if self.label is not None:
                 features["label"] = self.label

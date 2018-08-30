@@ -22,12 +22,16 @@ setup(name='eeglib',
 
           'License :: OSI Approved :: MIT',
 
-          'Programming Language :: Python :: 3',
+          'Programming Language :: Python :: 3.6',
           'Topic :: Scientific/Engineering::EEG',
       ],
       keywords='lib EEG signal analysis',
 
       packages=find_packages(exclude=["docs"]),
 
-      install_requires = ['numpy','scipy','sklearn','numba', 'pandas']
+      install_requires = ['numpy','scipy',
+                          'sklearn',
+                          'numba',
+                          'pandas',
+                          'pyedflib']
 )
