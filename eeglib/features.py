@@ -437,7 +437,10 @@ def DFA(data, fit_degree = 1, min_window_size = 4, max_window_size = None,
             Fn[i] = np.sqrt(np.sum((y-yn)**2)/n)
         F[n-min_window_size] = np.mean(Fn)
     
-    return np.polyfit(np.log(ns), np.log(F), 1)[0]
+    h = np.polyfit(np.log(ns), np.log(F), 1)[0]
+    if np.isnan(h):
+        return 0
+    return h
 
 # Cross Correlation Coeficient
 def CCC(c1, c2):
