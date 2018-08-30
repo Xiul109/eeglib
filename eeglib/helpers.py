@@ -113,10 +113,11 @@ class Helper(metaclass=ABCMeta):
         return self.iterator
     
     def _handleIndex(self, index, step=False):
-        if type(index) is int:
+        #Is integer?
+        if np.issubdtype(type(index), np.int):
             if index<0 and not step:
                 index = self.nSamples+index
-        
+        #Is string?
         elif type(index) is str:
             neg = index[0]=="-"
             
@@ -137,12 +138,13 @@ class Helper(metaclass=ABCMeta):
                 
             else: 
                 raise ValueError("Wrong value for the index")
-                
+        #Is timedelta?     
         elif type(index) is datetime.timedelta:
             index = int(self.sampleRate*index.total_seconds())
             
         else:
-            raise ValueError("A index can only be a int or a str.")
+            raise ValueError("A index can only be a int, a str or a " +
+                             "datetime.timedelta.")
             
         return index
 
@@ -205,13 +207,16 @@ class Helper(metaclass=ABCMeta):
         
         Parameters
         ----------
-        startPoint: int
+        startPoint: int, str or datetime.timedelta
+            * int: position of the sample
+            * str with format hh:mm:ss.ss: temporal position
+            * timedelta: temporal position
         
         Returns
         -------
         EEG
         """
-        startPoint=int(startPoint)
+        startPoint=self._handleIndex(startPoint)
         if startPoint+self.eeg.windowSize>self.nSamples:
             raise ValueError("The start point is too near of the end.")
         else:
