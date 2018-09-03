@@ -4,7 +4,6 @@
 This module contains helper classes that are useful to iterating over a EEG
 data stream. Currently there is support only for CSV files.
 """
-from abc import ABCMeta
 import datetime
 
 import csv
@@ -18,20 +17,28 @@ from eeglib.eeg import EEG
 from eeglib.preprocessing import bandPassFilter
 
 
-class Helper(metaclass=ABCMeta):
+class Helper():
     """
     This is an abstract class that defines the way every helper works.
     """
     
-    def __init__(self, windowSize=None, highpass=None, 
-                 lowpass=None, normalize=False, ICA=False,
+    def __init__(self, data, sampleRate=None, windowSize=None, names=None,
+                 highpass=None, lowpass=None, normalize=False, ICA=False,
                  selectedSignals=None):
         """
         Parameters
         ----------
+        data: 2D matrix
+            The signals data in the shape (nChannels, nSamples).
+        sampleRate: numeric, optional
+            The frequency at which the data was recorded. By default its value
+            is the lenght of the data.
         windowSize: int, optional
             The size of the window in which the calculations will be done. By
             default its value is the lenght of the data.
+        names: list of strings
+            A list containing the names of each channel in the same positions
+            than data channels.
         highpass: numeric, optional
             The signal will be filtered above this value.
         lowpass: numeric, optional
@@ -49,9 +56,32 @@ class Helper(metaclass=ABCMeta):
             data file hasn't names in the columns, they can be selected just by
             the index.
         """
+        
+        self.data = data
+        
+        #Names check
+        if names:
+            self.names = names
+        else:
+            self.names = [str(i) for i in range(data.shape[0])]
+        
+        #Check selected signals
         if selectedSignals:
             self.selectSignals(selectedSignals)
         
+        #SampleRate check
+        if not sampleRate:
+            self.sampleRate=len(self.data[0])
+        else:
+            self.sampleRate=sampleRate
+            
+        #windowSize check
+        if not windowSize:
+            self.windowSize = self.sampleRate
+        else:
+            self.windowSize = windowSize  
+        
+        #Attributes inicialization
         self.nChannels = len(self.data)
         self.nSamples = len(self.data[0])
         self.startPoint = 0
@@ -59,24 +89,23 @@ class Helper(metaclass=ABCMeta):
         self.step=None
         self.iterator = None
         self.duration = self.nSamples/self.sampleRate
-       
-        if not windowSize:
-            self.windowSize = self.sampleRate
-        else:
-            self.windowSize = windowSize
-            
+        
+        #Preparing inner EEG ovject
         self.prepareEEG(self.windowSize)
         
+        #Lowpass and highpass check
         if lowpass or highpass:
             for i,channel in enumerate(self.data):
-                self.data[i]=bandPassFilter(channel,self.sampleRate,highpass,
-                         lowpass)
-        
+                self.data[i]=bandPassFilter(channel, self.sampleRate, highpass,
+                                            lowpass)
+                
+        #ICA check
         if ICA:
             ica=FastICA()
             self.data=ica.fit_transform(self.data.transpose()).transpose()
-            self.names = [str(i) for i in range(len(self.nChannels))]
+            self.names = [str(i) for i in range(self.nChannels)]
         
+        #normilze check
         if normalize:
             self.data=zscore(self.data,axis=1)
     
@@ -286,7 +315,7 @@ class CSVHelper(Helper):
     This class is for applying diferents operations using the EEG class over a
     csv file.
     """
-    def __init__(self, path, *args, sampleRate=None, **kargs):
+    def __init__(self, path, *args, **kargs):
         """
         The rest of parameters can be seen at :meth:`Helper.__init__`
         
@@ -294,33 +323,27 @@ class CSVHelper(Helper):
         ----------
         path: str
             The path to the csv file
-        sampleRate: numeric, optional
-            The frequency at which the data was recorded. By default its value
-            is the lenght of the data.
         """
         with open(path) as file:
             reader=csv.reader(file)
             l1=reader.__next__()
-            self.data=[[] for _ in l1]
+            data=[[] for _ in l1]
             for row in reader:
-                for i,val in enumerate(row):
-                    self.data[i].append(float(val))
+                for i, val in enumerate(row):
+                    data[i].append(float(val))
+        #Checking if first row is for channels names
         try:
             l1=list(map(lambda x: float(x),l1))
-            for value,column in zip(l1,self.data):
+            for value,column in zip(l1, data):
                 column.insert(0,value)
-            self.names = [str(i) for i in range(len(l1))]
+            names = None
         except ValueError:
-            self.names=l1
+            names=l1
         
-        self.data=np.array(self.data)
+        data=np.array(data)
         
-        if not sampleRate:
-            self.sampleRate=len(self.data[0])
-        else:
-            self.sampleRate=sampleRate
         
-        super().__init__(*args,**kargs)
+        super().__init__(data, *args, names=names, **kargs)
         
 
 class EDFHelper(Helper):
@@ -328,7 +351,7 @@ class EDFHelper(Helper):
     This class is for applying diferents operations using the EEG class over an
     edf file.
     """
-    def __init__(self, path, *args, **kargs):
+    def __init__(self, path, *args, sampleRate=None, **kargs):
         """
         The rest of parameters can be seen at :meth:`Helper.__init__`
         
@@ -341,13 +364,16 @@ class EDFHelper(Helper):
         
         ns = reader.signals_in_file
         
-        self.data  = [reader.readSignal(i) for i in range(ns)]
-        self.names = reader.getSignalLabels()
+        data  = [reader.readSignal(i) for i in range(ns)]
+        names = reader.getSignalLabels()
         frequencies = reader.getSampleFrequencies()
         
-        self.sampleRate = frequencies[0]
-        if not all(frequencies==self.sampleRate):
-            raise ValueError("All channels must have the same frequency.")
-        self.data=np.array(self.data)
+        if not sampleRate:
+            sampleRate = frequencies[0]
+            if not all(frequencies==sampleRate):
+                raise ValueError("All channels must have the same frequency.")
         
-        super().__init__(*args,**kargs)
+        data=np.array(data)
+        
+        super().__init__(data, *args, sampleRate = sampleRate, names = names,
+             **kargs)
