@@ -126,10 +126,9 @@ class Wrapper():
             if self.flat:
                 features = flatData(features,"")
             
-            features["segment_label"] = 0
             if self.segmentation:
                 loop = True
-                self.segmentationIndex
+                features["segment_label"] = 0
                 while loop and self.segmentationIndex < len(self.segmentation):
                     curSeg, curLab = self.segmentation[self.segmentationIndex]
                     curPoint = self.iterator.auxPoint - self.iterator.step
