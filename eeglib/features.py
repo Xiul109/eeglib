@@ -178,7 +178,7 @@ def __getProbabilityP(D, i, e):
 
 @jit(int64[:,:](float64[:],int64,int64))
 def __getEmbeddedVectors(x, m, l):
-    size = len(x)- (m - 1) * l
+    size = len(x) - (m - 1) * l
     X = np.zeros((size,m))
     for i in range(size):
         X[i]=np.array(x[i:i + m * l:l])
@@ -287,7 +287,7 @@ def hjorthComplexity(data):
 
 
 # Sample Entropy
-def MSE(data, m = 2, l = 1, r = None, fr = 0.2, eps = 10e-2):
+def MSE(data, m = 2, l = 1, r = None, fr = 0.2, eps = 1e-10):
     """
     Returns Multiscale Sample Entropy of the given data.
     
@@ -306,7 +306,7 @@ def MSE(data, m = 2, l = 1, r = None, fr = 0.2, eps = 10e-2):
         parameter is ignored. By default, 0.2.
     eps: float, optional
         Small number added to avoid infinite results. If 0 infinite results can
-        appear. Default: 10e-2.
+        appear. Default: 1e-10.
     
     Returns
     -------
@@ -324,15 +324,16 @@ def MSE(data, m = 2, l = 1, r = None, fr = 0.2, eps = 10e-2):
 def __countEmbeddedDistances(data, m, l, r):
     X = __getEmbeddedVectors(data , m, l)
     
-    D = np.array([chebyshev(X[i], X[i+1]) for i in range(len(X)-1)])
+    #Generator of the chebyshev distances of each pair i,j
+    D = ( np.max(np.abs(X[i+1:]-X[i]),axis=1) for i in range(len(X)-1) )
     
-    return np.sum(D < r)
+    return np.sum(np.sum(d < r) for d in D)
 
 
 # Lempel-Ziv Complexity
 def LZC(data, threshold = None):
     """
-    Returns the Lempel-Ziv Complexity of the given data.
+    Returns the Lempel-Ziv Complexity (LZ76) of the given data.
     
     Parameters
     ----------
@@ -342,55 +343,97 @@ def LZC(data, threshold = None):
         A number use to binarize the signal. The values of the signal above
         threshold will be converted to 1 and the rest to 0. By default, the 
         median of the data.
+        
+    References
+    ----------
+    .. [1] M. Aboy, R. Hornero, D. Abasolo and D. Alvarez, "Interpretation of 
+           the Lempel-Ziv Complexity Measure in the Context of Biomedical 
+           Signal Analysis," in IEEE Transactions on Biomedical Engineering, 
+           vol. 53, no.11, pp. 2282-2288, Nov. 2006.
     """
     if not threshold:
         threshold=np.median(data)
+        
+    n = len(data)
     
     sequence = __binarize(data, threshold)
     
     c = __LZC(sequence)
+    b = n/np.log2(n)
     
- 
-    n = len(data)
-    lzc = c*(np.log2(c)+1)/n
+    
+    lzc = c/b
     
     return lzc
 
+@jit
 def __LZC(sequence):
-    subsequences = set()
-    subsequence  = []
-    for e in sequence:
-        subsequence.append(e)
-        if str(subsequence) not in subsequences:
-            subsequences.add(str(subsequence))
-            subsequence=[]
-            
-    return len(subsequences)
+    n = len(sequence)
+    complexity = 1
+    
+    q0    = 1
+    qSize = 1
+    
+    sqi   = 0
+    where = 0
+    
+    while(q0 + qSize <= n):
+        # If we are checking the end of the sequence we just need to look at
+        # the last element
+        if not sqi == q0-1:
+            contained, where = __isSubsequenceContained(sequence[q0:q0+qSize],
+                                                    sequence[sqi:q0+qSize-1])
+        else:
+            contained = sequence[q0+qSize] == sequence[q0+qSize-1]
+        
+         #If Q is contained in sq~, we increase the size of q
+        if(contained):
+            qSize+=1
+            sqi = where
+        #If Q is not contained the complexity is increased by 1 and reset Q
+        else:
+            q0+=qSize
+            qSize=1
+            complexity+=1
+            sqi=0
+    
+    
+    return complexity
 
-#def __minLZC(size):
-#    return int((np.sqrt(1 + 8*size) - 1)/2)
-#
-#def __maxLZC(size):
-#    v = 0
-#    i = 1
-#    n = 2
-#    while n*i < size:
-#        size-=n*i
-#        v+=n
-#        i += 1
-#        n = 2**i
-#    v += size // i
-#    
-#    return v
 
 def __binarize(data, threshold):
-    array = np.array(data)
-    return np.array(array > threshold, int)
+    if type(data) != np.ndarray:
+        data = np.array(data)
+    
+    return np.array(data > threshold, np.uint8)
+
+@jit
+def __isSubsequenceContained(subSequence, sequence):
+    """
+    Checks if the subSequence is into the sequence and returns a tuple that
+    informs if the subsequence is into and where. Return examples: (True, 7),
+    (False, -1).
+    """
+    n = len(sequence)
+    m = len(subSequence)
+    
+    for i in range(n-m+1):
+        equal = True
+        for j in range(m):
+            equal = subSequence[j] == sequence[i+j]
+            if not equal:
+                break
+        
+        if equal:
+            return True, i
+        
+    
+    return False, -1
 
 
 # Detrended Fluctuation Analysis
 def DFA(data, fit_degree = 1, min_window_size = 4, max_window_size = None,
-        fskip = 1):
+        fskip = 1, max_n_windows_sizes=None):
     """
     Applies Detrended Fluctuation Analysis algorithm to the given data.
     
@@ -402,45 +445,63 @@ def DFA(data, fit_degree = 1, min_window_size = 4, max_window_size = None,
         Degree of the polynomial used to model de local trends. Default: 1.
     min_window_size: int, optional
         Size of the smallest window that will be used. Default: 4.
-    man_window_size: int, optional
-        Size of the smallest window that will be used. Default: signalSize//2
+    max_window_size: int, optional
+        Size of the biggest window that will be used. Default: signalSize//4
     fskip: float, optional
         Fraction of the window that will be skiped in each iteration for each
-        window size. Default: 1.
+        window size. Default: 1
+    max_n_windows_sizes: int, optional
+        Maximum number of window sizes that will be used. The final number can
+        be smaller once the repeated values are removed
+        Default: log2(size)
     
     Returns
     -------
     float
         The resulting value
     """
+    #Arguments handling
     data = np.array(data)
+    
     size=len(data)
-        
+    
     if not max_window_size:
-        max_window_size = size//2
-        
+        max_window_size = size//4
+    
+    #Detrended data    
     Y = np.cumsum(data - np.mean(data))
     
-    F = np.zeros(max_window_size - min_window_size)
+    #Windows sizes
+    if not max_n_windows_sizes:
+        max_n_windows_sizes = int(np.round(np.log2(size)))
+        
+    ns = np.unique(
+          np.geomspace(min_window_size, max_window_size, max_n_windows_sizes,
+                       dtype=int))
     
-    ns = np.arange(min_window_size, max_window_size)
+    #Fluctuations for each window size
+    F = np.zeros(ns.size)
     
-    for n in ns:
-        itskip = int(fskip * n)
+    #Loop for each window size
+    for indexF,n in enumerate(ns):
+        itskip = max(int(fskip * n),1)
         nWindows = int(np.ceil((size - n + 1) / itskip))
-        Fn = np.zeros(nWindows)
+        
+        #Aux x
         x = np.arange(n)
-        for i in range(0, nWindows):
-            y  = Y[i*n:i*n+n]
-            p  = np.polyfit(x, y, fit_degree)
-            yn = np.polyval(p, x)
-            Fn[i] = np.sqrt(np.sum((y-yn)**2)/n)
-        F[n-min_window_size] = np.mean(Fn)
+        
+        y  = np.array([Y[i*itskip:i*itskip+n] for i in range(0,nWindows)])
+        c  = np.polynomial.polynomial.polyfit(x, y.T, fit_degree)
+        yn = np.polynomial.polynomial.polyval(x, c)
+            
+        F[indexF] = np.mean(np.sqrt(np.sum((y-yn)**2, axis=1)/n))
     
-    h = np.polyfit(np.log(ns), np.log(F), 1)[0]
-    if np.isnan(h):
+    alpha = np.polyfit(np.log(ns), np.log(F), 1)[0]
+    
+    if np.isnan(alpha):
         return 0
-    return h
+    
+    return alpha
 
 # Cross Correlation Coeficient
 def CCC(c1, c2):

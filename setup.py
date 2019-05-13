@@ -33,5 +33,7 @@ setup(name='eeglib',
                           'sklearn',
                           'numba',
                           'pandas',
-                          'pyedflib']
+                          'pyedflib'],
+      
+      test_require = ['colorednoise']
 )
