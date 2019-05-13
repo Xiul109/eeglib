@@ -74,7 +74,12 @@ class Wrapper():
             add a single feature.
         """
         for f in features:
-            self.addFeature(f[0],*f[1],**f[2])
+            if type(f) is tuple and len(f) == 3:
+                self.addFeature(f[0],*f[1],**f[2])
+            elif type(f) is str:
+                self.addFeature(f)
+            else:
+                raise ValueError("Only tuples of len 3 or str are valid values")
 
     def addFeature(self, name, *args, **kargs):
         """
