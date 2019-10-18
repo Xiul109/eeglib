@@ -1,8 +1,9 @@
 "This module define the functions for preprocessing the signal data"
 
-import numpy as np
 
-def bandPassFilter(data,sampleRate=None,highpass=None,lowpass=None):
+from scipy.signal import butter, filtfilt
+
+def bandPassFilter(data,sampleRate=None,highpass=None,lowpass=None, order=2):
     """
     Return the signal filtered between highpass and lowpass. Note that neither
     highpass or lowpass should be above sampleRate/2.
@@ -18,6 +19,8 @@ def bandPassFilter(data,sampleRate=None,highpass=None,lowpass=None):
         The signal will be filtered above this value.
     lowpass: numeric, optional
         The signal will be filtered bellow this value.
+    order: int, optional
+        Butterworth
 
     Returns
     -------
@@ -27,23 +30,25 @@ def bandPassFilter(data,sampleRate=None,highpass=None,lowpass=None):
     size=len(data)
     if not sampleRate:
         sampleRate=size
+    
+    #nyquist frequency
+    nyq = 0.5*sampleRate 
 
     if highpass:
-        highpassP=int(highpass*size/sampleRate)
-        highpassN=-highpassP
-    else:
-        highpassP=highpassN=None
+        highpass=highpass/nyq
+        
     if lowpass:
-        lowpassP=int(lowpass*size/sampleRate)
-        lowpassN=-lowpassP
+        lowpass=lowpass/nyq
+        
+    
+    if lowpass and highpass:
+        b,a = butter(order, [highpass, lowpass], btype="band")
+    elif lowpass:
+        b,a = butter(order, lowpass, btype="low")
+    elif highpass:
+        b,a = butter(order, highpass, btype="high")
     else:
-        lowpassP=lowpassN=size//2
+        return data
             
-    fft=np.fft.fft(data)
     
-    window=np.zeros(size)
-    window[highpassP:lowpassP]=1
-    window[lowpassN:highpassN]=1
-    
-    filtered_fft=fft*window
-    return np.real(np.fft.ifft(filtered_fft))  
+    return filtfilt(b, a, data)

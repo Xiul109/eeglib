@@ -35,7 +35,7 @@ class Helper():
             is the lenght of the data.
         windowSize: int, optional
             The size of the window in which the calculations will be done. By
-            default its value is the lenght of the data.
+            default its value is the lenght of one second of the data.
         names: list of strings
             A list containing the names of each channel in the same positions
             than data channels.
