@@ -3,7 +3,7 @@
 
 from setuptools import setup, find_packages
 
-__version__ = "0.3.2"
+__version__ = "0.3.3"
 
 setup(name='eeglib',
       version = __version__,
@@ -33,7 +33,8 @@ setup(name='eeglib',
                           'sklearn',
                           'numba',
                           'pandas',
-                          'pyedflib'],
+                          'pyedflib',
+                          'fastdtw'],
       
       test_require = ['colorednoise']
 )

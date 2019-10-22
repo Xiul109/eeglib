@@ -12,6 +12,8 @@ from eeglib.features import (averageBandValues, hjorthActivity, hjorthMobility,
 from eeglib.preprocessing import bandPassFilter
 from eeglib.auxFunctions import listType
 
+import fastdtw
+
 # Default bands ranges
 defaultBands = {"delta": (1, 4), "theta": (4, 7),
                 "alpha": (8, 12), "beta": (12, 30)}
@@ -827,4 +829,66 @@ class EEG:
             to those channels.           
         """
 #        c1, c2 = self.getChannel(i1), self.getChannel(i2)
-        return self.__applyFunctionTo2C(CCC, channels)
+        return self.__applyFunctionTo2C(CCC, channels, 
+                                        allPermutations=allPermutations)
+    
+    def DTW(self, channels=None, allPermutations = False, normalize = False, 
+            returnOnlyDistances = True ,*args, **kargs):
+        """
+        Computes the Dynamic Time Warping algortihm between the data of the 
+        given channels. It uses the FastDTW implementation given by the library
+        fastdtw.
+    
+        Parameters
+        ----------
+        channels: Variable type, optional
+           In order to understand how this parameter works go to the doc of
+           :py:meth:`eeglib.eeg.EEG.__applyFunctionTo2C` 
+        allPermutations: bool, optional
+            In order to understand how this parameter works go to the doc of
+           :py:meth:`eeglib.eeg.EEG.__applyFunctionTo2C`
+        normalize: bool optional
+             If True the result of the algorithm is divided by the window size.
+             Default: True.
+        returnOnlyDistances: bool, optional
+            If True, the result of the function will include only the distances
+            after applying the DTW algorithm. If False it will return also the
+            path. Default: True.
+        radius : int, optional
+            size of neighborhood when expanding the path. A higher value will
+            increase the accuracy of the calculation but also increase time
+            and memory consumption. A radius equal to the size of x and y will
+            yield an exact dynamic time warping calculation.
+        dist : function or int, optional
+            The method for calculating the distance between x[i] and y[j]. If
+            dist is an int of value p > 0, then the p-norm will be used. If
+            dist is a function then dist(x[i], y[j]) will be used. If dist is
+            None then abs(x[i] - y[j]) will be used.
+        
+        Returns
+        -------
+        tuple, float, dict of floats or dict of tuples
+            If a tuple is passed the it returns the result of applying the 
+            function to the channels specified in the tuple. If another valid 
+            value is passed, the method returns a dictionary, being the key the
+            two channels used and the value the result of applying the function
+            to those channels.      
+        """
+        
+        fAux=lambda c1, c2: fastdtw.fastdtw(c1, c2, *args, **kargs)
+        
+        if normalize and returnOnlyDistances:
+            f= lambda c1, c2: fAux(c1,c2)[0]/self.windowSize
+        elif returnOnlyDistances:
+            f= lambda c1, c2: fAux(c1,c2)[0]
+        elif normalize:
+            def f(c1,c2):
+                ret = fAux(c1,c2)
+                return ret[0]/self.windowSize,ret[1]
+        else:
+            f=fAux
+        
+        ret = self.__applyFunctionTo2C(f, channels, 
+                                       allPermutations=allPermutations)
+        
+        return ret
