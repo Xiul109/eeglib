@@ -81,14 +81,63 @@ class Wrapper():
             else:
                 raise ValueError("Only tuples of len 3 or str are valid values")
 
-    def addFeature(self, name, *args, **kargs):
+    def addCustomFeature(self, function, channels = None, twoChannels = False,
+                         name = None):
         """
         Adds a feature that will be returned in every
         
         Parameters
         ----------
+        function: function
+            The function to apply.
+        
+        channels: Variable type, optional
+            The channels over which the function will be applied.
+            * int:  the index of the channel.
+            * str:  the name of the channel.
+            * list of strings and integers:  a list of channels.
+            * slice:  a slice selecting the range of channels.
+            * None: all the channels.
+            The function to apply to the data to obtain the feature.
+        
+        twoChannels: bool
+            If function receives two channels of data this parameter should be
+            True. Default: False.
         name: str
+            A custom name for the feature that will be visible in the df.
+        
+            
+        Returns
+        -------
+        None
+        """
+        
+        if not twoChannels:
+            f = lambda: self.helper.eeg._applyFunctionTo(function, channels)
+        else:
+            f = lambda: self.helper.eeg._applyFunctionTo2C(function, channels)
+        
+        if not name:
+            name = function.__name__
+            
+        self.functions[name] = f
+        
+            
+
+    def addFeature(self, functionName, *args, name=None, hideArgs=False,
+                   **kargs):
+        """
+        Adds a feature that will be returned in every
+        
+        Parameters
+        ----------
+        functionName: str
             The name of the function to call.
+        name: str
+            A custom name for the feature that will be visible in the df.
+        hideArgs: bool
+            If True, the arguments are not attached to the name in the df.
+            Default: False.
         *args and **kargs:
             Parameters of the function that computes the feature.
         
@@ -96,8 +145,17 @@ class Wrapper():
         -------
         None
         """
-        f = getattr(self.helper.eeg, name)
-        self.functions[name+str(args)+str(kargs)]=(lambda: f(*args, **kargs))
+        
+        f = getattr(self.helper.eeg, functionName)
+        
+        if not name:
+            name = functionName
+            
+        if not hideArgs:
+            name+=str(args)+str(kargs)
+            
+        
+        self.functions[name]=(lambda: f(*args, **kargs))
     
     
     def featuresNames(self):
@@ -124,11 +182,11 @@ class Wrapper():
         if self.lastStored == self.iterator.auxPoint:
             features = self.storedFeatures[-1]
         else:
-            if not flat:
+            if flat is None:
                 flat = self.flat
             
             features = {name:f() for name, f in self.functions.items()}
-            if self.flat:
+            if flat:
                 features = flatData(features,"")
             
             if self.segmentation:
@@ -156,8 +214,8 @@ class Wrapper():
 
     def getStoredFeatures(self):
         """
-        Returns the stored features if store was set to True, else it will
-        return None.
+        Returns the stored features if store was set to True, else it returns
+        None.
         """
         if self.store:
             return pd.DataFrame(self.storedFeatures)

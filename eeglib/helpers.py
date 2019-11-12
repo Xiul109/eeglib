@@ -108,6 +108,9 @@ class Helper():
         #normilze check
         if normalize:
             self.data=zscore(self.data,axis=1)
+            
+        #Setting an initial value for the EEG window
+        self.moveEEGWindow(self.startPoint)
     
     def __iter__(self):
         return self._getIterator()

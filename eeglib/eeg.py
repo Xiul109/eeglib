@@ -56,10 +56,10 @@ class SampleWindow:
 
         self.window = np.zeros((channelNumber,windowSize))
         if names:
-            self.__names=names
-            self.__windowDict={n:l for (n,l) in zip(names,self.window)}
+            self._names=names
+            self._windowDict={n:l for (n,l) in zip(names,self.window)}
         else:
-            self.__names=None
+            self._names=None
 
     
     def set(self, samples, columnMode=False):
@@ -87,9 +87,9 @@ class SampleWindow:
                     self.window = np.transpose(np.array(samples))
                 else:
                     self.window = np.array(samples)
-                if self.__names:
+                if self._names:
                     for i in range(self.channelNumber):
-                        self.__windowDict[self.__names[i]]=self.window[i]
+                        self._windowDict[self._names[i]]=self.window[i]
             else:
                 raise ValueError(("the number of samples must be equal to the "
                                  + "window size and each sample length must be"
@@ -124,8 +124,8 @@ class SampleWindow:
         if i is None:
             return self.window
         elif type(i) is str:
-            if self.__names:
-                return self.__windowDict[i]
+            if self._names:
+                return self._windowDict[i]
             else:
                 raise ValueError("There aren't names asociated to the \
                                  channels.")
@@ -215,11 +215,11 @@ class EEG:
         self.window = SampleWindow(windowSize, channelNumber,names=names)
 
     # Function to handle the windowFunction parameter
-    def __handleWindowFunction(self, windowFunction):
+    def _handleWindowFunction(self, windowFunction):
         if windowFunction is None:
             return 1
         elif type(windowFunction) == str:
-            if windowFunction is "hamming":
+            if windowFunction == "hamming":
                 return np.hamming(self.windowSize)
             else:
                 raise ValueError("the option chosen is not valid")
@@ -272,14 +272,14 @@ class EEG:
         """
         return self.window.getChannel(i)
     
-    def __applyFunctionTo(self, function, i=None):
+    def _applyFunctionTo(self, function, i=None):
         data=self.window.getChannel(i)
         if len(np.shape(data))==1:
             return function(data)
         else:
             return np.array([function(d) for d in data])
     
-    def __applyFunctionTo2C(self, function, channels = None,
+    def _applyFunctionTo2C(self, function, channels = None,
                             allPermutations=False):
         """
         Applies a function that uses two signals by selecting the channels to
@@ -379,8 +379,8 @@ class EEG:
             An array with the result of the Fourier Transform. If more than one
             channel was selected the array will be of 2 Dimensions.
         """
-        windowFunction=self.__handleWindowFunction(windowFunction)
-        return self.__applyFunctionTo(lambda x:np.fft.fft(x*windowFunction), i)
+        windowFunction=self._handleWindowFunction(windowFunction)
+        return self._applyFunctionTo(lambda x:np.fft.fft(x*windowFunction), i)
 
     # Gets the magnitude of each complex value resulting from a Fourier
     # Transform from a component i
@@ -512,7 +512,7 @@ class EEG:
         bandsSignals = {}
         for key, band in bands.items():
             bounds = self.getBoundsForBand(band)
-            bandsSignals[key]=self.__applyFunctionTo(lambda x: 
+            bandsSignals[key]=self._applyFunctionTo(lambda x: 
                 bandPassFilter(x, self.sampleRate, bounds[0], bounds[1]), i)
 
         return bandsSignals
@@ -540,7 +540,7 @@ class EEG:
             return object will be a 1D array containing the result of the
             procesing.
         """
-        return self.__applyFunctionTo(PFD,i)
+        return self._applyFunctionTo(PFD,i)
     
     def HFD(self, i=None, kMax=None):
         """
@@ -566,7 +566,7 @@ class EEG:
             return object will be a 1D array containing the result of the
             procesing.
         """
-        return self.__applyFunctionTo(lambda v:HFD(v,kMax),i)
+        return self._applyFunctionTo(lambda v:HFD(v,kMax),i)
 
     # Hjorth Parameters:
     def hjorthActivity(self, i=None):
@@ -585,7 +585,7 @@ class EEG:
             return object will be a 1D array containing the result of the
             procesing.
         """
-        return self.__applyFunctionTo(hjorthActivity,i)
+        return self._applyFunctionTo(hjorthActivity,i)
 
     def hjorthMobility(self, i=None):
         """
@@ -609,7 +609,7 @@ class EEG:
             return object will be a 1D array containing the result of the
             procesing.
         """
-        return self.__applyFunctionTo(hjorthMobility,i)
+        return self._applyFunctionTo(hjorthMobility,i)
 
     def hjorthComplexity(self, i=None):
         """
@@ -633,7 +633,7 @@ class EEG:
             return object will be a 1D array containing the result of the
             procesing.
         """
-        return self.__applyFunctionTo(hjorthComplexity,i)
+        return self._applyFunctionTo(hjorthComplexity,i)
 
     def synchronizationLikelihood(self, channels = None, allPermutations=False,
                                   m=None, l=None, w1=None, w2=None, pRef=0.05,
@@ -646,10 +646,10 @@ class EEG:
         ----------
         channels: Variable type, optional
            In order to understand how this parameter works go to the doc of
-           :py:meth:`eeglib.eeg.EEG.__applyFunctionTo2C` 
+           :py:meth:`eeglib.eeg.EEG._applyFunctionTo2C` 
         allPermutations: bool, optional
             In order to understand how this parameter works go to the doc of
-           :py:meth:`eeglib.eeg.EEG.__applyFunctionTo2C` 
+           :py:meth:`eeglib.eeg.EEG._applyFunctionTo2C` 
         m: int, optional
             Numbers of elements of the embedded vectors.
         l: int, optional
@@ -682,7 +682,7 @@ class EEG:
             w1 = int(2 * l * (m - 1))
         if w2 == None:
             w2 = int(10 // pRef + w1)
-        return self.__applyFunctionTo2C(lambda c1,c2:synchronizationLikelihood(
+        return self._applyFunctionTo2C(lambda c1,c2:synchronizationLikelihood(
                                              c1,c2, m, l, w1, w2, pRef,**kargs)
                                         ,channels, allPermutations)
 
@@ -739,7 +739,7 @@ class EEG:
             return object will be a 1D array containing the result of the
             procesing. 
         """
-        return self.__applyFunctionTo(lambda x: MSE(x,*args, **kargs), i)
+        return self._applyFunctionTo(lambda x: MSE(x,*args, **kargs), i)
     
     def LZC(self, i=None, *args, **kargs):
         """
@@ -771,7 +771,7 @@ class EEG:
             return object will be a 1D array containing the result of the
             procesing.
         """
-        return self.__applyFunctionTo(lambda x: LZC(x, *args, **kargs), i)
+        return self._applyFunctionTo(lambda x: LZC(x, *args, **kargs), i)
     
     def DFA(self, i=None, *args, **kargs):
         """
@@ -803,7 +803,7 @@ class EEG:
             return object will be a 1D array containing the result of the
             procesing.
         """
-        return self.__applyFunctionTo(lambda x: DFA(x, *args, **kargs), i)
+        return self._applyFunctionTo(lambda x: DFA(x, *args, **kargs), i)
     
     def CCC(self, channels = None, allPermutations=False):
         """
@@ -814,10 +814,10 @@ class EEG:
         ----------
         channels: Variable type, optional
            In order to understand how this parameter works go to the doc of
-           :py:meth:`eeglib.eeg.EEG.__applyFunctionTo2C` 
+           :py:meth:`eeglib.eeg.EEG._applyFunctionTo2C` 
         allPermutations: bool, optional
             In order to understand how this parameter works go to the doc of
-           :py:meth:`eeglib.eeg.EEG.__applyFunctionTo2C` 
+           :py:meth:`eeglib.eeg.EEG._applyFunctionTo2C` 
         
         Returns
         -------
@@ -829,7 +829,7 @@ class EEG:
             to those channels.           
         """
 #        c1, c2 = self.getChannel(i1), self.getChannel(i2)
-        return self.__applyFunctionTo2C(CCC, channels, 
+        return self._applyFunctionTo2C(CCC, channels, 
                                         allPermutations=allPermutations)
     
     def DTW(self, channels=None, allPermutations = False, normalize = False, 
@@ -843,10 +843,10 @@ class EEG:
         ----------
         channels: Variable type, optional
            In order to understand how this parameter works go to the doc of
-           :py:meth:`eeglib.eeg.EEG.__applyFunctionTo2C` 
+           :py:meth:`eeglib.eeg.EEG._applyFunctionTo2C` 
         allPermutations: bool, optional
             In order to understand how this parameter works go to the doc of
-           :py:meth:`eeglib.eeg.EEG.__applyFunctionTo2C`
+           :py:meth:`eeglib.eeg.EEG._applyFunctionTo2C`
         normalize: bool optional
              If True the result of the algorithm is divided by the window size.
              Default: True.
@@ -888,7 +888,7 @@ class EEG:
         else:
             f=fAux
         
-        ret = self.__applyFunctionTo2C(f, channels, 
+        ret = self._applyFunctionTo2C(f, channels, 
                                        allPermutations=allPermutations)
         
         return ret

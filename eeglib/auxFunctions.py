@@ -29,12 +29,15 @@ def flatData(data, name):
          
     """
     res={}
+    auxName=name
+    if name != "":
+        auxName = auxName + "_"
     if type(data) is dict:
         for key, val in data.items():
-            res.update(flatData(val, name + "_"+str(key)))
+            res.update(flatData(val, auxName+str(key)))
     elif hasattr(data, "__iter__"):   
         for i, val in enumerate(data):
-            res.update(flatData(val, name+"_%d"%i))
+            res.update(flatData(val, auxName+"%d"%i))
     else:
         res = {name:data}
     
