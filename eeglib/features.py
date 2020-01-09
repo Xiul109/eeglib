@@ -2,7 +2,7 @@
 
 import numpy as np
 from scipy.spatial.distance import chebyshev
-from numba import jit, float64,int64
+from numba import njit, float64,int64
 
 
 def averageBandValues(fft,bands):
@@ -48,7 +48,7 @@ def PFD(data):
     size=len(data)
     return np.log(size) / (np.log(size) + np.log(size / (size + 0.4 * countSignChanges(derivative))))
 
-@jit
+@njit
 def HFD(data,kMax=None):
     """
     Returns the Higuchi Fractal Dimension of the signal given data.
@@ -125,7 +125,7 @@ def synchronizationLikelihood(c1, c2, m, l, w1, w2, pRef=0.05, epsilonIterations
     return __SL(c1, c2, m, l, w1, w2, pRef,epsilonIterations)
 
 # Auxiliar functions for Synchronization Likeihood
-@jit(float64(float64[:],float64[:],int64,int64,int64,int64,float64,int64))
+@njit
 def __SL(c1, c2, m, l, w1, w2, pRef, epsilonIterations):
     X1 = __getEmbeddedVectors(c1, m, l)
     X2 = __getEmbeddedVectors(c2, m, l)
@@ -155,7 +155,7 @@ def __SL(c1, c2, m, l, w1, w2, pRef, epsilonIterations):
         SLMax += SijMax
     return SL / SLMax if SLMax>0 else 0
 
-@jit(int64(float64[:,:],int64,float64))
+@njit
 def __getHij(D, i, e):
     summ = 0
     for j in range(len(D)):
@@ -163,20 +163,20 @@ def __getHij(D, i, e):
             summ += 1
     return summ
 
-@jit(float64[:,:](float64[:,:]))
+@njit
 def __getDistances(X):
     t=len(X)
-    D=np.zeros((t,t),dtype=np.float)
+    D=np.zeros((t,t),dtype=np.float64)
     for i in range(t):
         for j in range(i):
             D[j,i]=D[i,j]=np.linalg.norm(X[i]-X[j])
 
     return D
-@jit(float64(float64[:,:],int64,float64))
+@njit
 def __getProbabilityP(D, i, e):
     return __getHij(D, i, e) /len(D) 
 
-@jit(int64[:,:](float64[:],int64,int64))
+@njit
 def __getEmbeddedVectors(x, m, l):
     size = len(x) - (m - 1) * l
     X = np.zeros((size,m))
@@ -185,11 +185,11 @@ def __getEmbeddedVectors(x, m, l):
 
     return X
 
-@jit(float64(float64,float64))
+@njit
 def __logDiference(p1,p2):
     return abs(np.log(p2/p1))
 
-@jit(float64(float64[:,:],int64,float64,int64))
+@njit
 def __getEpsilon(D, i, pRef, iterations):
     eInf = 0
     eSup = None
@@ -366,7 +366,7 @@ def LZC(data, threshold = None):
     
     return lzc
 
-@jit
+@njit
 def __LZC(sequence):
     n = len(sequence)
     complexity = 1
@@ -407,7 +407,7 @@ def __binarize(data, threshold):
     
     return np.array(data > threshold, np.uint8)
 
-@jit
+@njit
 def __isSubsequenceContained(subSequence, sequence):
     """
     Checks if the subSequence is into the sequence and returns a tuple that
