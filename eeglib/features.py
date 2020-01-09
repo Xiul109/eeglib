@@ -48,7 +48,6 @@ def PFD(data):
     size=len(data)
     return np.log(size) / (np.log(size) + np.log(size / (size + 0.4 * countSignChanges(derivative))))
 
-@njit
 def HFD(data,kMax=None):
     """
     Returns the Higuchi Fractal Dimension of the signal given data.
@@ -66,12 +65,18 @@ def HFD(data,kMax=None):
     float
         The resulting value
     """
-    #Inicializations
-    data=np.array(data) 
-    N = len(data)
+    #Inicializations  
+    data=np.array(data)
+    N = len(data)  
     kMax = N // 4 if kMax is None else kMax     #Default kMax
     L = np.zeros(kMax-1)
     x = np.array((-np.log(np.arange(2,kMax+1)),np.ones(kMax-1))).transpose()
+    
+    return _HFD(data, N, kMax, L, x)
+    
+    
+@njit
+def _HFD(data, N, kMax, L, x):
     # Loop from 2 to kMax
     for k in range(2, kMax + 1):
         Lk = np.zeros(k)
@@ -121,7 +126,10 @@ def synchronizationLikelihood(c1, c2, m, l, w1, w2, pRef=0.05, epsilonIterations
     """
     if len(c1)!=len(c2):
         raise ValueError("c1 and c2 must have the same lenght")        
-
+    
+    c1 = np.array(c1)
+    c2 = np.array(c2)
+    
     return __SL(c1, c2, m, l, w1, w2, pRef,epsilonIterations)
 
 # Auxiliar functions for Synchronization Likeihood
@@ -181,7 +189,7 @@ def __getEmbeddedVectors(x, m, l):
     size = len(x) - (m - 1) * l
     X = np.zeros((size,m))
     for i in range(size):
-        X[i]=np.array(x[i:i + m * l:l])
+        X[i]=x[i:i + m * l:l]
 
     return X
 
@@ -327,7 +335,7 @@ def __countEmbeddedDistances(data, m, l, r):
     #Generator of the chebyshev distances of each pair i,j
     D = ( np.max(np.abs(X[i+1:]-X[i]),axis=1) for i in range(len(X)-1) )
     
-    return np.sum(np.sum(d < r) for d in D)
+    return np.sum(np.fromiter((np.sum(d < r) for d in D), dtype=np.int))
 
 
 # Lempel-Ziv Complexity
