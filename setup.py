@@ -3,12 +3,16 @@
 
 from setuptools import setup, find_packages
 
+with open("readme.md", "r") as fh:
+    long_description = fh.read()
+
 __version__ = "0.3.4"
 
 setup(name='eeglib',
       version = __version__,
       description='A library with some tools and functions for EEG signal analysis',
-      long_description=open('readme.md').read(),
+      long_description=long_description,
+    long_description_content_type="text/markdown",
       author='Luis Cabañero Gómez',
       author_email='luiscabanerogomezxcr@hotmail.com',
 #      url='',
@@ -20,10 +24,10 @@ setup(name='eeglib',
           'Intended Audience :: Developers',
           'Intended Audience :: Science/Research',
 
-          'License :: OSI Approved :: MIT',
+          'License :: OSI Approved :: MIT License',
 
           'Programming Language :: Python :: 3.6',
-          'Topic :: Scientific/Engineering::EEG',
+          'Topic :: Scientific/Engineering',
       ],
       keywords='lib EEG signal analysis',
 
