@@ -148,10 +148,11 @@ class Wrapper():
         
         f = getattr(self.helper.eeg, functionName)
         
+        hadName = name
         if not name:
             name = functionName
             
-        if not hideArgs:
+        if not hideArgs and not hadName:
             name+=str(args)+str(kargs)
             
         
@@ -230,7 +231,7 @@ class Wrapper():
         """
         data=[features for features in self]
         if self.store:
-            data=self.storedFeatures+data
+            data=self.storedFeatures
         return pd.DataFrame(data)
     
     def reset(self):
