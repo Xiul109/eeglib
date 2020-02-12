@@ -2,10 +2,6 @@
 
 The module eeglib is a library for python 3.4+ that aims to be a set of tools to analyse EEG signals. It defines some data structures aswell as some processings in order to make easier to work with EEG data.
 
-This library was initialy a Final Degree Project and you can find the documentation of the development in the next link:
-
-[Documentation (Spanish)](https://ruidera.uclm.es/xmlui/handle/10578/15441)
-
 ## Main features
 * Different types of processings
     * FFT
@@ -23,9 +19,9 @@ This library was initialy a Final Degree Project and you can find the documentat
 
 ## Installation
 
-In order to install this package you just have to open a terminal in this directory and write:
+Installation using pip:
 
-`$ pip install .`
+`$ pip install eeglib`
 
 ## Dependencies
 
@@ -127,3 +123,26 @@ So, the scheme to follow with wrappers is the next:
 2. Create the wrapper object.
 3. Select the desired features to compute. They can be parameterized by adding the parameters just behind the name.
 4. Call the method "getAllFeatures()" in order to compute every feature from every window at once or iterate over the Wrapper object for obtaining the features of each window. They are returned as a pandas.DataFrame or a pandas.Series.
+
+# Documents related
+This library was initialy a Final Degree Project and you can find the documentation of the development in the next link:
+
+[Final Degree Project Documentation (Spanish)](https://ruidera.uclm.es/xmlui/handle/10578/15441)
+
+Later it was extented as part of a Master's thesis that can be found in the next link:
+
+[Master's thesis (Spanish)](https://ruidera.uclm.es/xmlui/handle/10578/19062)
+
+
+## Papers
+
+There are also some papers related to this library that can be seen bellow:
+
+### Open Access
+
+* [Computational EEG Analysis Techniques When Playing Video Games: A Systematic Review](https://www.mdpi.com/2504-3900/2/19/483)
+* [Analysis of Cognitive Load Using EEG when Interacting with Mobile Devices](https://www.mdpi.com/2504-3900/31/1/70)
+
+### Not open access
+
+* [eeglib: computational analysis of cognitive performance during the use of video games](https://link.springer.com/article/10.1007%2Fs12652-019-01592-9)
