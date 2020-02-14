@@ -1,5 +1,88 @@
 import pandas as pd
 from eeglib.auxFunctions import flatData
+from eeglib.eeg import EEG
+
+class _FeatureAdder():
+    """
+    This class is used by the wrapper to add features defined in the EEG object 
+    to the proccesing.
+    """
+    
+    _excludedFunctions = ["set", "getBoundsForBand"]
+    
+    # Init
+    def __init__(self, wrapper):
+        #Setting attributes
+        self._wrapper = wrapper
+        self._eeg = wrapper.helper.eeg
+        
+        #Iterating over EEG.__dict__ items
+        for key, value in EEG.__dict__.items():
+            if (key[0] != "_" and callable(value) and
+                not key in self._excludedFunctions):
+                # If the conditions are fullfilled the modified function is
+                # added to the __dict__
+                self.__dict__[key] = self._adderCreator(value)
+    
+    # Creator of adder functions
+    def _adderCreator(self, f):
+        """
+        Creates an adder method. When an adder method is called, it adds a
+        feature, that is obtained by applying f to a signal, to the wrapper.
+        
+        Parameters
+        ----------
+        f: function
+            The function 
+        
+        Returns
+        -------
+        function
+        """
+        def func(*args, name=None, hideArgs=False, **kargs):
+            hadName = name
+            if not name:
+                name = f.__name__
+                
+            if not hideArgs and not hadName:
+                name+=str(args)+str(kargs)
+                
+            self._wrapper.functions[name]=(lambda: f(self._eeg, *args,
+                                                     **kargs))
+        
+        func.__name__ = f.__name__
+        func.__doc__ = """
+        **It adds the next feature to the wrapper.**
+        
+        %s
+        """%f.__doc__
+        
+        return func
+    
+    def __call__(self, functionName, *args, name=None, hideArgs=False, 
+                 **kargs):
+        """
+        Adds a feature that will be included in the dataset.
+        
+        Parameters
+        ----------
+        functionName: str
+            The name of the function to call.
+        name: str
+            A custom name for the feature that will be visible in the df.
+        hideArgs: bool
+            If True, the arguments are not attached to the name in the df.
+            Default: False.
+        *args and **kargs:
+            Parameters of the function that computes the feature.
+        
+        Returns
+        -------
+        None
+        """
+        f = getattr(EEG, functionName)
+        
+        self._adderCreator(f)(*args, name=name, hideArgs=hideArgs, **kargs)
 
 class Wrapper():
     """
@@ -56,6 +139,8 @@ class Wrapper():
             self.segmentationIndex = 0
         else:
             self.segmentation = None
+            
+        self.addFeature = _FeatureAdder(self)
     
     def __iter__(self):
         self.iterator = iter(self.helper)
@@ -84,7 +169,7 @@ class Wrapper():
     def addCustomFeature(self, function, channels = None, twoChannels = False,
                          name = None):
         """
-        Adds a feature that will be returned in every
+        Adds a custom feature that will be included in the dataset.
         
         Parameters
         ----------
@@ -122,41 +207,6 @@ class Wrapper():
             
         self.functions[name] = f
         
-            
-
-    def addFeature(self, functionName, *args, name=None, hideArgs=False,
-                   **kargs):
-        """
-        Adds a feature that will be returned in every
-        
-        Parameters
-        ----------
-        functionName: str
-            The name of the function to call.
-        name: str
-            A custom name for the feature that will be visible in the df.
-        hideArgs: bool
-            If True, the arguments are not attached to the name in the df.
-            Default: False.
-        *args and **kargs:
-            Parameters of the function that computes the feature.
-        
-        Returns
-        -------
-        None
-        """
-        
-        f = getattr(self.helper.eeg, functionName)
-        
-        hadName = name
-        if not name:
-            name = functionName
-            
-        if not hideArgs and not hadName:
-            name+=str(args)+str(kargs)
-            
-        
-        self.functions[name]=(lambda: f(*args, **kargs))
     
     
     def featuresNames(self):

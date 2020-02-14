@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 with open("readme.md", "r") as fh:
     long_description = fh.read()
 
-__version__ = "0.3.4"
+__version__ = "0.3.5"
 
 setup(name='eeglib',
       version = __version__,
@@ -14,7 +14,7 @@ setup(name='eeglib',
       long_description=long_description,
     long_description_content_type="text/markdown",
       author='Luis Cabañero Gómez',
-      author_email='luiscabanerogomezxcr@hotmail.com',
+      author_email='Luis.Cabanero@uclm.es',
 #      url='',
       py_modules = ['eeglib'],
       license='MIT',
