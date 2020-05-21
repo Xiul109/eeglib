@@ -99,7 +99,22 @@ class SampleWindow:
         else:
             raise ValueError("samples must be a subscriptable object wich"+
                              "contains subcriptable objects")
-
+    
+    def getIndicesList(self, i):
+        if i == None:
+            return [*range(0, self.channelNumber)]
+        elif type(i) == slice:
+            return self.getIndicesList(None)[i]
+        elif np.issubdtype(type(i), np.integer):
+            return [i]
+        elif type(i) == str:
+            return [self._names.index(i)]
+        elif type(i) == list:
+            return sum((self.getIndicesList(j) for j in i), start=[])
+        else:
+            raise ValueError("This method only accepts int, str, list or" +
+                             "slice types and not %s"%type(i))
+    
     def getChannel(self, i=None):
         """
         Returns an array containing the data of the the selected channel/s.
@@ -127,22 +142,111 @@ class SampleWindow:
             if self._names:
                 return self._windowDict[i]
             else:
-                raise ValueError("There aren't names asociated to the \
-                                 channels.")
+                raise ValueError("There aren't names asociated to the " +
+                                 "channels.")
         elif type(i) is list:
             selectedChannels=np.zeros((len(i),self.windowSize),dtype=np.float)
             for c, e in enumerate(i):
                 if type(e) in [int, str]:
                     selectedChannels[c]=self.getChannel(e)
                 else:
-                    raise ValueError("The list can only contain int and/or \
-                                     strings.")
+                    raise ValueError("The list can only contain int and/or " +
+                                     "strings.")
             return selectedChannels
         elif type(i) in [int,slice]:
             return self.window[i]
         else:
-            raise ValueError("This method only accepts int, str, list or" +
+            raise ValueError("This method only accepts int, str, list or " +
                              "slice types and not %s"%type(i))
+    
+    def getPairsIndicesList(self, i, allPermutations=False):
+        permutate = permutations if allPermutations else combinations
+        if i == None:
+            return permutate([*range(0, self.channelNumber)], 2)
+        elif type(i) == slice:
+            return self.getPairsIndicesList(self.getIndicesList(None)[i])
+        elif type(i) is tuple and len(i) == 2:
+            return [tuple(self.getIndicesList(list(i)))]
+        elif type(i) == list:
+            if listType(i) is tuple:
+                return [self.getPairsIndicesList(c)[0] for c in i]
+            else:
+                return permutate(self.getIndicesList(i), 2)
+        else:
+            raise ValueError("This method only accepts int, str, list or " +
+                             "slice types and not %s"%type(i))
+    
+    def getPairOfChannels(self, channels = None, allPermutations=False):
+        """
+        Applies a function that uses two signals by selecting the channels to
+        use. It will apply the function to different channels depending on the
+        parameters. Note: a single channel can be selected by using an int or
+        a string if a name for the channel was specified.
+        
+        Parameters
+        ----------            
+        channels: Variable type, optional
+            * tuple of lenght 2 containing channel indexes: applies the
+              function to the two channels specified by the tuple.
+            * list of tuples(same restrictions than the above): applies the
+              function to every tuple in the list.
+            * list of index: creates combinations of channels specifies in the
+              list depending of the allPermutations parameter.
+            * None: Are channels are used in the same way than in the list
+              above. This is the default value.
+        
+        allPermutations: bool, optional
+            Only used when channels is a list of index or None. If True all
+            permutations of the channels in every order are used; if False only
+            combinations of different channels are used. Example: with the list
+            [0, 2, 4] and allPermutations = True, the channels used will be
+            (0,2), (0,4), (2,0), (2,4), (4,0), (4,2); meanwhile, with
+            allPermutations = False, the channels used will be: (0,2), (0,4),
+            (2,4). Default: False.
+            
+        Returns
+        -------
+        If a tuple is passed the it returns the result of applying the function
+        to the channels specified in the tuple. If another valid value is
+        passed, the method returns a dictionary, being the key the two channels
+        used and the value the result of applying the function to those
+        channels.
+        """
+        permutate = permutations if allPermutations else combinations
+        
+        if channels == None:
+            channels = [*range(self.channelNumber)]
+        elif type(channels) == slice:
+            channels = [*range(self.channelNumber)[channels]]
+            
+        if type(channels) is tuple:
+            if len(channels) != 2:
+                raise ValueError("If you specify a tuple, it must have " +
+                                 "exactly two(2) elements")
+            else:
+                return (self.getChannel(channels[0]), 
+                        self.getChannel(channels[1]))
+        elif type(channels) is list:
+            t = listType(channels)
+            if t is tuple:
+                acs = np.array(channels)
+                if len(acs.shape) == 2 and acs.shape[1] == 2:
+                    return [(self.getChannel(c[0]), self.getChannel(c[1])) 
+                            for c in channels]
+                else:
+                    raise ValueError("The tuples of the list must have " +
+                                     "exactly two(2) elements")
+            else:
+                try:
+                    return permutate(self.getChannel(channels), 2)
+                except ValueError:
+                    raise ValueError("The list must contain either tuples " +
+                                     "or integers and strings, but no "+
+                                     "combinations of them.")
+        else:
+            raise ValueError("This method only accepts list (either of int "+
+                             "and str or tuples) or tuple types and not %s" %
+                             type(channels))
 
     class SampleWindowIterator:
         """
@@ -213,6 +317,7 @@ class EEG:
         self.sampleRate = sampleRate
         self.channelNumber = channelNumber
         self.window = SampleWindow(windowSize, channelNumber,names=names)
+        self.outputMode = "array"
 
     # Function to handle the windowFunction parameter
     def _handleWindowFunction(self, windowFunction):
@@ -273,9 +378,35 @@ class EEG:
         return self.window.getChannel(i)
     
     def _applyFunctionTo(self, function, i=None):
+        """
+        Returns the raw data stored at the given index of the windows.
+
+        Parameters
+        ----------
+        i: Variable type, optional
+            * int:  the index of the channel.
+            * str:  the name of the channel.
+            * list of strings and integers:  a list of channels that will be
+              returned as a 2D ndarray.
+            * slice:  a slice selecting the range of channels that wll be
+              returned as a 2D ndarray.
+            * None: all the data returned as a 2D ndarray
+
+        Returns
+        -------
+        list
+            The list of values of a specific channel.
+        """
         data=self.window.getChannel(i)
         if len(np.shape(data))==1:
             return function(data)
+        elif self.outputMode=="dict":
+            indices = self.window.getIndicesList(i)
+            if self.window._names:
+                keys = np.array(self.window._names)[indices]
+            else:
+                keys=indices
+            return {key:function(d) for key, d in zip(keys, data)}
         else:
             return np.array([function(d) for d in data])
     
@@ -320,34 +451,20 @@ class EEG:
         used and the value the result of applying the function to those
         channels.
         """
-        permutate = permutations if allPermutations else combinations
+        data = self.window.getPairOfChannels(channels, allPermutations)
         
-        if channels == None:
-            channels = list(range(self.channelNumber))
-        
-        if type(channels) is tuple:
-            if len(channels) != 2:
-                raise ValueError("If you specify a tuple, it must have \
-                                 exactly two(2) elements")
+        if(type(data) is tuple):
+            return function(*data)
+        elif self.outputMode == "dict":
+            indices = self.window.getPairsIndicesList(channels,allPermutations)
+            if self.window._names:
+                keys = [(self.window._names[i[0]], self.window._names[i[1]]) 
+                        for i in indices]
             else:
-                return function(*self.getChannel(list(channels)))
-        elif type(channels) is list:
-            t = listType(channels)
-            if t is tuple:
-                acs = np.array(channels)
-                if len(acs.shape) == 2 and acs.shape[1] == 2:
-                    return {c:function(*self.getChannel(list(c))) for c in 
-                            channels}
-                else:
-                    raise ValueError("The tuples of the list must have \
-                                     exactly two(2) elements")
-            else:
-                return {c:function(*self.getChannel(list(c))) for c in
-                        permutate(channels, 2)}
+                keys=indices
+            return {key:function(*value) for key, value in zip(keys, data)}
         else:
-            raise ValueError("This method only accepts list (either of int\
-                              and str or tuples) or tuple types and not %s" %
-                             type(channels))
+            return [function(*value) for value in data]
                     
 
     def getFourierTransform(self, i=None,  windowFunction=None):

@@ -146,7 +146,7 @@ class Helper():
     
     def _handleIndex(self, index, step=False):
         #Is integer?
-        if np.issubdtype(type(index), np.int):
+        if np.issubdtype(type(index), np.integer):
             if index<0 and not step:
                 index = self.nSamples+index
         #Is string?
@@ -345,8 +345,10 @@ class CSVHelper(Helper):
         
         data=np.array(data)
         
-        
-        super().__init__(data, *args, names=names, **kargs)
+        if("names" in kargs):
+            super().__init__(data, *args, **kargs)
+        else:
+            super().__init__(data, *args, names=names, **kargs)
         
 
 class EDFHelper(Helper):

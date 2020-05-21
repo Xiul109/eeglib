@@ -6,15 +6,16 @@ from setuptools import setup, find_packages
 with open("readme.md", "r") as fh:
     long_description = fh.read()
 
-__version__ = "0.3.5"
+__version__ = "0.3.6"
 
 setup(name='eeglib',
       version = __version__,
       description='A library with some tools and functions for EEG signal analysis',
       long_description=long_description,
-    long_description_content_type="text/markdown",
+      long_description_content_type="text/markdown",
       author='Luis Cabañero Gómez',
       author_email='Luis.Cabanero@uclm.es',
+      url="https://github.com/Xiul109/eeglib",
 #      url='',
       py_modules = ['eeglib'],
       license='MIT',

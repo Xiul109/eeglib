@@ -90,8 +90,8 @@ class Wrapper():
     once. The main usage of this class if for generating features to use with
     machine learning techniques.
     """
-    def __init__(self, helper, flat = True, store=True, label = None,
-                 segmentation = None):
+    def __init__(self, helper, flat = True, flatSeparator = "_", store=True,
+                 label = None, segmentation = None):
         """
         Parameters
         ----------
@@ -103,6 +103,8 @@ class Wrapper():
             dimensional sequence of data. If False, the return value will be
             a list containing the result of each feature, that can be a float,
             a dict or an array. Default: True.
+        separator: str
+            It is used to separate the features names when flatten.
         store: Bool
             If True, the data will be stored in a self.storedFeatures. Default:
             True.
@@ -124,6 +126,7 @@ class Wrapper():
         self.functions = {}
         
         self.flat = flat
+        self.flatSeparator = flatSeparator
         
         self.store = store
         self.lastStored = -1
@@ -216,15 +219,9 @@ class Wrapper():
         return self.functions.keys()
     
     
-    def getFeatures(self, flat=None):
+    def getFeatures(self):
         """
         Returns the features in the current window of the helper iterator.
-        
-        Parameters
-        ----------
-        flat: Boolean, optional
-            Used to force the data to be flatten or not. If None it will apply
-            the value specified in the constructor. Default: None
         
         Returns
         -------
@@ -232,13 +229,10 @@ class Wrapper():
         """
         if self.lastStored == self.iterator.auxPoint:
             features = self.storedFeatures[-1]
-        else:
-            if flat is None:
-                flat = self.flat
-            
+        else:            
             features = {name:f() for name, f in self.functions.items()}
-            if flat:
-                features = flatData(features,"")
+            if self.flat:
+                features = flatData(features,"", self.flatSeparator)
             
             if self.segmentation:
                 loop = True
