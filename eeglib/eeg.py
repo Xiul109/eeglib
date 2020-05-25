@@ -3,10 +3,11 @@
 "This module define the data structures that are used in this library"
 
 import numpy as np
+import scipy as sp
 
 from itertools import permutations, combinations
 
-from eeglib.features import (averageBandValues, hjorthActivity, hjorthMobility,
+from eeglib.features import (bandPower, hjorthActivity, hjorthMobility,
                              hjorthComplexity, MSE, LZC, DFA, HFD, PFD, CCC,
                              synchronizationLikelihood)
 from eeglib.preprocessing import bandPassFilter
@@ -319,15 +320,13 @@ class EEG:
         self.window = SampleWindow(windowSize, channelNumber,names=names)
         self.outputMode = "array"
 
+
     # Function to handle the windowFunction parameter
     def _handleWindowFunction(self, windowFunction):
         if windowFunction is None:
             return 1
-        elif type(windowFunction) == str:
-            if windowFunction == "hamming":
-                return np.hamming(self.windowSize)
-            else:
-                raise ValueError("the option chosen is not valid")
+        elif type(windowFunction) in (str, tuple):
+            return sp.signal.get_window(windowFunction, self.windowSize)
         elif type(windowFunction) == np.ndarray:
             if len(windowFunction) == self.windowSize:
                 return windowFunction
@@ -337,6 +336,7 @@ class EEG:
 
         else:
             raise ValueError("not a valid type for windowFunction")
+
 
     def set(self, samples, columnMode=False):
         """
@@ -467,7 +467,8 @@ class EEG:
             return [function(*value) for value in data]
                     
 
-    def getFourierTransform(self, i=None,  windowFunction=None):
+    def DFT(self, i=None, windowFunction=None, output="complex", 
+            onlyPositiveFrequencies = False):
         """
         Returns the Discrete Fourier Transform of the data at a given index of
         the window.
@@ -483,12 +484,18 @@ class EEG:
               used.
             * None: all the channels will be used.
         
-        windowFunction: String or numpy.ndarray, optional
-            This can be a String with the name of the function (currently only
-            supported **"hamming"**) or it can be a numpy array with a size
+        windowFunction: str, tuple or numpy.ndarray, optional
+            This can be a string with the name of the function, a tuple with a
+            str with the name of the funcion in the first position and the 
+            parameters of the funcion in the nexts or a numpy array with a size
             equals to the window size. In the first case an array with the
             size of windowSize will be created. The created array will be
             multiplied by the data in the window before FFT is used.
+        
+        output: str, optional
+            * "complex": default output of the FFT, x+yi
+            * "magnitude": computes the magnitude of the FFT, sqrt(x^2+y^2)
+            * "phase": computes the phase of the FFT, atan2(yi,x)
 
         Returns
         -------
@@ -497,14 +504,29 @@ class EEG:
             channel was selected the array will be of 2 Dimensions.
         """
         windowFunction=self._handleWindowFunction(windowFunction)
-        return self._applyFunctionTo(lambda x:np.fft.fft(x*windowFunction), i)
-
-    # Gets the magnitude of each complex value resulting from a Fourier
-    # Transform from a component i
-    def getMagnitudes(self, *args, **kargs):
+        f1 = lambda x:np.fft.fft(x*windowFunction)
+        if output == "magnitude":
+            f = lambda x: np.abs(f1(x))
+        elif output == "phase":
+            f = lambda x: np.angle(f1(x))
+        elif output == "complex":
+            f=f1
+        else:
+            raise ValueError('Only "complex", "magnitude" or "phase" are ' +
+                             'valid values por output parameter')
+        
+        if onlyPositiveFrequencies:
+            auxF = f
+            f = lambda x: auxF(x)[:self.windowSize//2+1]
+            
+        return self._applyFunctionTo(f, i)
+    
+    
+    def PSD(self, i = None, windowFunction = "hann", nperseg = None,
+            retFrequencies = False):
         """
-        Returns the magnitude of each complex value resulting from a Discrete
-        Fourier Transform at a the given index of the window.
+        Returns the Power Spectral Density of the data at a given index of
+        the window using the Welch method.
 
         Parameters
         ----------
@@ -516,26 +538,45 @@ class EEG:
             * slice: a slice selecting the range of channels that will be
               used.
             * None: all the channels will be used.
-            
-        windowFunction: String or numpy.ndarray, optional
-            This can be a String with the name of the function (currently only
-            supported **"hamming"**) or it can be a numpy array with a size
-            equals to the window size. In the first case an array with the
-            size of windowSize will be created. The created array will be
-            multiplied by the data in the window before FFT is used.
+        
+        windowFunction: str or tuple or array_like, optional
+            Desired window to use. If window is a string or tuple, it is passed
+            to get_window to generate the window values, which are DFT-even by 
+            default. See get_window for a list of windows and required 
+            parameters. If window is array_like it will be used directly as the
+            window and its length must be nperseg. Defaults to a Hann window.
+        
+        nperseg: int, optional
+            Length of each segment. Defaults to None, but if window is str or 
+            tuple, is set to 256, and if window is array_like, is set to the 
+            length of the window.
+        
+        retFrequencies: bool, optional
+            If True two arrays will be raturned for each channel, one with the
+            frequencies and another
 
         Returns
         -------
         numpy.ndarray
-            An array with the magnitudes of the Fourier Transform. If more than
-            one channel was selected the array will be of 2 Dimensions.
+            An array with the result of the Fourier Transform. If more than one
+            channel was selected the array will be of 2 Dimensions.
         """
-        return abs(self.getFourierTransform(*args,**kargs))
+        if nperseg == None:
+            nperseg = self.windowSize//2
+        f1 = lambda x: sp.signal.welch(x, self.sampleRate,
+                                       window = windowFunction,
+                                       nperseg = nperseg)
+        if not retFrequencies:
+            f = lambda x: f1(x)[1]
+        else:
+            f = f1
+        return self._applyFunctionTo(f, i)
 
-    def getAverageBandValues(self, i=None, bands=defaultBands, *args, **kargs):
+
+    def bandPower(self, i=None, bands=defaultBands, spectrumFrom = "DFT",
+                  windowFunction="hann", nperseg = None, normalize=False):
         """
-        Returns the average magnitude of each band at the given index of the
-        window
+        Returns the power of each band at the given index.
 
         Parameters
         ----------
@@ -553,12 +594,26 @@ class EEG:
             used. It is a dict with the name of each band as key and a tuple
             with the lower and upper bounds as value.
         
-        windowFunction: String or numpy.ndarray, optional
-            This can be a String with the name of the function (currently only
-            supported **"hamming"**) or it can be a numpy array with a size
-            equals to the window size. In the first case an array with the
-            size of windowSize will be created. The created array will be
-            multiplied by the data in the window before FFT is used.
+        spectrumFrom: str, optional
+            * "DFT": uses the spectrum from the DFT of the signal.
+            * "PSD": uses the spectrum from the PSD of the signal.
+        
+        windowFunction: str or tuple or array_like, optional
+            Desired window to use. If window is a string or tuple, it is passed
+            to get_window to generate the window values, which are DFT-even by 
+            default. See get_window for a list of windows and required 
+            parameters. If window is array_like it will be used directly as the
+            window and its length must be nperseg. Defaults to a Hann window.
+        
+        nperseg: int, optional
+            This parameter is only relevant when powerFrom is "PSD", else it is
+            ignored. Length of each segment. Defaults to None, but if window is
+            str or tuple, is set to 256, and if window is array_like, is set to
+            the length of the window.
+        
+        normalize: bool, optional
+            If True the each band power is divided by the total power of the
+            spectrum. Default False.
 
         Returns
         -------
@@ -567,15 +622,30 @@ class EEG:
             the magnitudes. If more than one channel was selected the return
             object will be a list containing the dict for each channel selected
         """
-        magnitudes = self.getMagnitudes(i,*args,**kargs)
         bands={key:self.getBoundsForBand(b) for key,b in bands.items()}
-        if magnitudes.ndim==1:
-            return averageBandValues(magnitudes,bands)
+        freqRes = self.sampleRate/self.windowSize
+        if spectrumFrom.upper() == "DFT":
+            spectrum = self.DFT(i, windowFunction, output="magnitude", 
+                                onlyPositiveFrequencies=True)   
+        elif spectrumFrom.upper() == "PSD":
+            if nperseg == None:
+                nperseg = self.windowSize//2
+            spectrum = self.PSD(i, windowFunction, nperseg)
+            factor = self.windowSize//nperseg
+            bands = {k:(b[0]//factor, b[1]//factor) for k, b in bands.items()}
+            freqRes*=factor
         else:
-            averagedValues=[]
-            for c in magnitudes:
-                averagedValues.append(averageBandValues(c,bands))
-            return averagedValues
+            raise ValueError('%s is not a valid value for '%spectrumFrom + 
+                             'powerFrom parameter. Only "DFT" or "PSD" are ' +
+                             'valid values.')
+        
+        if type(spectrum) is dict:
+            return {key:bandPower(s, bands, freqRes, normalize) for key, s
+                    in spectrum.items()}
+        elif spectrum.ndim==1:
+            return bandPower(spectrum, bands, freqRes, normalize)
+        else:
+            return [bandPower(s, bands, freqRes, normalize) for s in spectrum]
 
     def getBoundsForBand(self, bandBounds):
         """

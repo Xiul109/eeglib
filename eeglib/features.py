@@ -1,34 +1,40 @@
 "This module define the functions of the features for EEG analysis"
 
 import numpy as np
-from scipy.spatial.distance import chebyshev
+import scipy as sp
 from numba import njit, float64,int64
 
+def bandPower(spectrum, bandsLimits, freqRes, normalize=False):
+    """
+        Returns the power of each band at the given index.
 
-def averageBandValues(fft,bands):
-    """
-    Given a Fourier Transform, this function returns it averaged across the
-    bands selected. The final value is calculated by multiplying the mean of
-    the data in the given bounds by 2/len(fft).
-    
-    Parameters
-    ----------
-    fft: array_like
-        The result of applying the fft function to a signal
-    bands: dict{key:tuple}
-        The bands names(key) and bounds(value)
-    
-    Returns
-    -------
-    dict{key:float}
-        The average value for each band
-    """
-    bandsValues = {}
-    for key,bounds in bands.items():
-        bandsValues[key] = (2 / len(fft)) * np.mean(
-                fft[bounds[0]:bounds[1]])
-    
-    return bandsValues
+        Parameters
+        ----------
+        spectrum: 1D arraylike
+            An array containing the spectrum of a signal
+
+        bandsLimits: dict
+            This parameter is used to indicate the bands that are going to be
+            used. It is a dict with the name of each band as key and a tuple
+            with the lower and upper bounds as value.
+        
+        freqRes: float
+            Minimum resolution for the frequency.
+        
+        normalize: bool, optional
+            If True the each band power is divided by the total power of the
+            spectrum. Default False.
+
+        Returns
+        -------
+        dict
+            The keys are the name of each band and the values are their power.
+        """
+    total = 1
+    if(normalize):
+        total = sp.integrate.simps(spectrum, dx=freqRes)
+    return {key:sp.integrate.simps(spectrum[band[0]:band[1]], dx=freqRes)/total
+            for key, band in bandsLimits.items()}
 
 def PFD(data):
     """
