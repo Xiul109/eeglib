@@ -33,6 +33,7 @@ def flatData(data, name, separator = "_"):
     auxName=name
     if name != "":
         auxName = auxName + separator
+        
     if type(data) is dict:
         for key, val in data.items():
             res.update(flatData(val, auxName+str(key), separator))
