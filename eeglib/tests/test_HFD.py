@@ -20,7 +20,6 @@ class TestHFD(unittest.TestCase):
             results.append(features.HFD(samples,self.kMax))
         
         results_mean = np.mean(results)
-        print("HFD results mean for white noise:", results_mean)
         self.assertAlmostEqual(results_mean, 2, delta=0.05)
 
         
@@ -31,7 +30,6 @@ class TestHFD(unittest.TestCase):
             results.append(features.HFD(samples, self.kMax))
         
         results_mean = np.mean(results)
-        print("HFD results mean for brownian noise:", results_mean)
         self.assertAlmostEqual(results_mean, 1.5, delta=0.05)
         
     def test_pink_noise(self):
@@ -41,7 +39,6 @@ class TestHFD(unittest.TestCase):
             results.append(features.HFD(samples, self.kMax))
         
         results_mean = np.mean(results)
-        print("HFD results mean for pink noise:", results_mean)
         self.assertAlmostEqual(results_mean, 1.85, delta=0.05)    
 
 

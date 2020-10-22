@@ -18,7 +18,6 @@ class TestLZC(unittest.TestCase):
             results.append(features.LZC(samples))
         
         results_mean = np.mean(results)
-        print(" LZC results mean for white noise:", results_mean)
         self.assertAlmostEqual(results_mean, 1.05, delta=0.05)
 
         
@@ -29,7 +28,6 @@ class TestLZC(unittest.TestCase):
             results.append(features.LZC(samples))
         
         results_mean = np.mean(results)
-        print(" LZC results mean for brownian noise:", results_mean)
         self.assertAlmostEqual(results_mean, 0.15, delta=0.05)
         
     def test_pink_noise(self):
@@ -39,7 +37,6 @@ class TestLZC(unittest.TestCase):
             results.append(features.LZC(samples))
         
         results_mean = np.mean(results)
-        print(" LZC results mean for pink noise:", results_mean)
         self.assertAlmostEqual(results_mean, 0.75, delta=0.05)
 
 

@@ -8,7 +8,7 @@ import scipy as sp
 from itertools import permutations, combinations
 
 from eeglib.features import (bandPower, hjorthActivity, hjorthMobility,
-                             hjorthComplexity, MSE, LZC, DFA, HFD, PFD, CCC,
+                             hjorthComplexity, sampEn, LZC, DFA, HFD, PFD, CCC,
                              synchronizationLikelihood)
 from eeglib.preprocessing import bandPassFilter
 from eeglib.auxFunctions import listType
@@ -18,7 +18,6 @@ import fastdtw
 # Default bands ranges
 defaultBands = {"delta": (1, 4), "theta": (4, 7),
                 "alpha": (8, 12), "beta": (12, 30)}
-"This variable are the default frequency bands used in this library"
 
 
 class SampleWindow:
@@ -895,7 +894,7 @@ class EEG:
 
         return beta / (alpha + theta)
     
-    def MSE(self, i=None, *args, **kargs):
+    def sampEn(self, i=None, *args, **kargs):
         """
         Returns Multiscale Sample Entropy at the given channel/s.
         
@@ -926,7 +925,7 @@ class EEG:
             return object will be a 1D array containing the result of the
             procesing. 
         """
-        return self._applyFunctionTo(lambda x: MSE(x,*args, **kargs), i)
+        return self._applyFunctionTo(lambda x: sampEn(x,*args, **kargs), i)
     
     def LZC(self, i=None, *args, **kargs):
         """

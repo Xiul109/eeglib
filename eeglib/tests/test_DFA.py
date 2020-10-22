@@ -57,7 +57,7 @@ class TestDFA(unittest.TestCase):
         
         #Params to test
         fit_degrees = [1,2,4,8]
-        min_window_sizes = [1,2,4,8,16]
+        min_window_sizes = [2,4,8,16]
         max_window_sizes = [self.n_points, self.n_points//2, self.n_points//4]
         fskip = [0.01, 0.1, 0.5, 1,2]
         max_n_windows_sizess = [None, 10, 30, 50]

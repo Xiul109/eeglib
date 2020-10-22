@@ -2,7 +2,8 @@
 
 import numpy as np
 import scipy as sp
-from numba import njit, float64,int64
+from sklearn.neighbors import KDTree
+from numba import njit
 
 def bandPower(spectrum, bandsLimits, freqRes, normalize=False):
     """
@@ -193,11 +194,11 @@ def __getProbabilityP(D, i, e):
 @njit
 def __getEmbeddedVectors(x, m, l):
     size = len(x) - (m - 1) * l
-    X = np.zeros((size,m))
-    for i in range(size):
-        X[i]=x[i:i + m * l:l]
+    X = np.zeros((m, size))
+    for i in range(m):
+        X[i]=x[i*l:i * l + size]
 
-    return X
+    return X.T
 
 @njit
 def __logDiference(p1,p2):
@@ -301,9 +302,9 @@ def hjorthComplexity(data):
 
 
 # Sample Entropy
-def MSE(data, m = 2, l = 1, r = None, fr = 0.2, eps = 1e-10):
+def sampEn(data, m = 2, l = 1, r = None, fr = 0.2, eps = 1e-10):
     """
-    Returns Multiscale Sample Entropy of the given data.
+    Returns Sample Entropy of the given data.
     
     Parameters
     ----------
@@ -333,15 +334,18 @@ def MSE(data, m = 2, l = 1, r = None, fr = 0.2, eps = 1e-10):
     A = __countEmbeddedDistances(data, m+1, l, r) + eps
     B = __countEmbeddedDistances(data, m  , l, r) + eps
     
-    return -np.log(A/B) if A != 0 else float("inf")
+    if B == 0:
+        return -np.inf
+    elif A == 0:
+        return np.inf
+    return -np.log(A/B)
 
 def __countEmbeddedDistances(data, m, l, r):
-    X = __getEmbeddedVectors(data , m, l)
+    X = __getEmbeddedVectors(data , m, 1)
     
-    #Generator of the chebyshev distances of each pair i,j
-    D = ( np.max(np.abs(X[i+1:]-X[i]),axis=1) for i in range(len(X)-1) )
-    
-    return np.sum(np.fromiter((np.sum(d < r) for d in D), dtype=np.int))
+    kdtree = KDTree(X, metric="chebyshev")
+    # Return the count
+    return np.sum(kdtree.query_radius(X, r, count_only=True) - 1)
 
 
 # Lempel-Ziv Complexity
