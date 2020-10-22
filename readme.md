@@ -10,7 +10,7 @@ The module eeglib is a library for python 3.4+ that aims to be a set of tools to
     * Petrosian and Higuchi Fractal Dimensions
     * Hjorth Parameters
     * Detrended Fluctuation Analysis
-    * Multiscale Sample Entropy
+    * Sample Entropy
     * Lempel-Ziv Complexity
     * Cross Correlation Coeficient
 * Load data from CSV files
