@@ -49,6 +49,10 @@ class TestBandpassFilter(unittest.TestCase):
         self.assertAlmostEqual(energy(filtered)/energy(self.signalBand), 1, 
                                delta = 0.1)
     
+    def test_nopass(self):
+        filtered = bandPassFilter(self.signal)
+        np.testing.assert_array_equal(self.signal, filtered)
+    
 
 if __name__ == "__main__":
     unittest.main()

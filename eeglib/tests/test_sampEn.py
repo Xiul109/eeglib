@@ -3,7 +3,6 @@ import unittest
 import numpy as np
 import colorednoise
 
-from itertools import product
 
 import eeglib.features as features
 

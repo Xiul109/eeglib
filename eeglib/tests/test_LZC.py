@@ -3,13 +3,13 @@ import unittest
 import numpy as np
 import colorednoise
 
-from itertools import product
-
 import eeglib.features as features
 
 class TestLZC(unittest.TestCase):
-    n_tests  = 50
+    n_tests  = 100
     n_points = 1000
+    
+    error = 0.06
     
     def test_white_noise(self):
         results = []
@@ -18,7 +18,7 @@ class TestLZC(unittest.TestCase):
             results.append(features.LZC(samples))
         
         results_mean = np.mean(results)
-        self.assertAlmostEqual(results_mean, 1.05, delta=0.05)
+        self.assertAlmostEqual(results_mean, 1.05, delta=self.error)
 
         
     def test_brownian_noise(self):
@@ -28,7 +28,7 @@ class TestLZC(unittest.TestCase):
             results.append(features.LZC(samples))
         
         results_mean = np.mean(results)
-        self.assertAlmostEqual(results_mean, 0.15, delta=0.05)
+        self.assertAlmostEqual(results_mean, 0.15, delta=self.error)
         
     def test_pink_noise(self):
         results = []
@@ -37,7 +37,13 @@ class TestLZC(unittest.TestCase):
             results.append(features.LZC(samples))
         
         results_mean = np.mean(results)
-        self.assertAlmostEqual(results_mean, 0.75, delta=0.05)
+        self.assertAlmostEqual(results_mean, 0.75, delta=self.error)
+        
+    def test_binarize(self):
+        testData = [*range(10)]
+        expected = [0,0,0,0,0,1,1,1,1,1]
+        binar = features._binarize(testData, 4)
+        np.testing.assert_array_equal(binar, expected)
 
 
 if __name__ == "__main__":

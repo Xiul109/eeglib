@@ -7,6 +7,10 @@ from itertools import product
 
 import eeglib.features as features
 
+#Supress warnings
+import warnings
+warnings.filterwarnings("ignore")
+
 class TestDFA(unittest.TestCase):
     n_tests  = 100
     n_points = 1000
