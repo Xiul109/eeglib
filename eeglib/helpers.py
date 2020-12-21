@@ -133,7 +133,7 @@ class Helper():
         Iterator
         """
         if type(i) is not slice:
-            raise ValueError("only slices can be used.")
+            raise ValueError("Only slices can be used.")
         return self.prepareIterator(i.step, i.start, i.stop)
     
     def _getIterator(self):
@@ -175,7 +175,7 @@ class Helper():
             index = int(self.sampleRate*index.total_seconds())
             
         else:
-            raise ValueError("A index can only be a int, a str or a " +
+            raise ValueError("An index can only be a int, a str or a " +
                              "datetime.timedelta.")
             
         return index
@@ -195,9 +195,6 @@ class Helper():
             The index of the last sample + 1 until where the iteration will go.
             By default the size of the data.
         """
-        if not self.step:
-            raise Exception("prepareEEG method must be called before \
-                            prepareIterator.")
         if startPoint:
             self.startPoint=self._handleIndex(startPoint)
         if endPoint:
@@ -228,18 +225,19 @@ class Helper():
         self.windowSize = windowSize
         self.eeg = EEG(windowSize, self.sampleRate, self.nChannels,
                        names=self.names)
+        self.windowPosition = None
         if not self.step:
             self.step = windowSize
         return self.eeg
 
-    def moveEEGWindow(self,startPoint):
+    def moveEEGWindow(self, position):
         """
-        Moves the window to start at startPoint. Also it returns the inner eeg
+        Moves the window to start at position. Also it returns the inner eeg
         object.
         
         Parameters
         ----------
-        startPoint: int, str or datetime.timedelta
+        position: int, str or datetime.timedelta
             * int: position of the sample
             * str with format hh:mm:ss.ss: temporal position
             * timedelta: temporal position
@@ -248,23 +246,15 @@ class Helper():
         -------
         EEG
         """
-        startPoint=self._handleIndex(startPoint)
-        if startPoint+self.eeg.windowSize>self.nSamples:
-            raise ValueError("The start point is too near of the end.")
+        position =self._handleIndex(position)
+        if position+self.eeg.windowSize>self.nSamples:
+            raise ValueError("The start point is too near to the end.")
         else:
-            self.eeg.set(self.data[:,startPoint:startPoint+self.eeg.windowSize]
+            self.eeg.set(self.data[:, position:position + self.eeg.windowSize]
                          ,columnMode=True)
+            self.windowPosition = position
         return self.eeg
-    
-    def getEEG(self):
-        """
-        Returns the EEG object.
 
-        Returns
-        -------
-        EEG
-        """
-        return self.eeg
     
     def getNames(self, indexes=None):
         """
@@ -301,9 +291,6 @@ class Iterator():
         self.step=step
         self.auxPoint=auxPoint
         self.endPoint=endPoint
-        
-    def __iter__(self):
-        return self
 
     # Function for iterations
     def __next__(self):

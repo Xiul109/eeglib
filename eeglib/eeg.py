@@ -8,7 +8,7 @@ import scipy as sp
 from itertools import permutations, combinations
 
 from eeglib.features import (bandPower, hjorthActivity, hjorthMobility,
-                             hjorthComplexity, sampEn, LZC, DFA, HFD, PFD, CCC,
+                             hjorthComplexity, sampEn, LZC, DFA, HFD, PFD,
                              synchronizationLikelihood)
 from eeglib.preprocessing import bandPassFilter
 from eeglib.auxFunctions import listType
@@ -91,14 +91,14 @@ class SampleWindow:
                     for i in range(self.channelNumber):
                         self._windowDict[self._names[i]]=self.window[i]
             else:
-                raise ValueError(("the number of samples must be equal to the "
+                raise ValueError(("The number of samples must be equal to the "
                                  + "window size and each sample length must be"
-                                 +" a equals to channelNumber ( {0} ) if not"
-                                 +"in columnMode and viceversa if in"+
-                                 "columnMode").format(self.channelNumber))
+                                 +" a equals to channelNumber ( {0} ) if not "
+                                 +"in columnMode and viceversa if in "+
+                                 "columnMode.").format(self.channelNumber))
         else:
-            raise ValueError("samples must be a subscriptable object wich"+
-                             "contains subcriptable objects")
+            raise ValueError("Samples must be a subscriptable object wich "+
+                             "contains subcriptable objects.")
     
     def getIndicesList(self, i):
         if i == None:
@@ -248,33 +248,6 @@ class SampleWindow:
                              "and str or tuples) or tuple types and not %s" %
                              type(channels))
 
-    class SampleWindowIterator:
-        """
-        This class is used as a only for iterating over the data. It only has a
-        __init__ method and __next__ method.
-        """
-        
-        def __init__(self, iterWindow):
-            """
-            Parameters
-            ----------
-            iterWindow: SampleWindow
-                The SampleWindow object to be iterated.
-            """
-            self.iterWindow = iterWindow
-            self.i = 0
-
-        def __next__(self):
-            if self.i < len(self.iterWindow):
-                self.i += 1
-                return self.iterWindow[self.i - 1]
-            else:
-                raise StopIteration
-    # Returns the iteration class
-
-    def __iter__(self):
-        return self.SampleWindowIterator(self)
-
     def __getitem__(self, n):
         return self.window[:,n]
 
@@ -331,10 +304,10 @@ class EEG:
                 return windowFunction
             else:
                 raise ValueError(
-                    "the size of windowFunction is not the same as windowSize")
+                "The size of windowFunction is not the same as windowSize.")
 
         else:
-            raise ValueError("not a valid type for windowFunction")
+            raise ValueError("Not a valid type for windowFunction.")
 
 
     def set(self, samples, columnMode=False):
@@ -504,6 +477,7 @@ class EEG:
         """
         windowFunction=self._handleWindowFunction(windowFunction)
         f1 = lambda x:np.fft.fft(x*windowFunction)
+        output = output.lower()
         if output == "magnitude":
             f = lambda x: np.abs(f1(x))
         elif output == "phase":
@@ -552,7 +526,8 @@ class EEG:
         
         retFrequencies: bool, optional
             If True two arrays will be raturned for each channel, one with the
-            frequencies and another
+            frequencies and another with the spectral density of those 
+            frequencies.
 
         Returns
         -------
@@ -883,7 +858,7 @@ class EEG:
         float
             The engagement level.
         """
-        bandValues = self.getAverageBandValues()
+        bandValues = self.bandPower()
         alphas, betas, thetas = [], [], []
         for d in bandValues:
             alphas.append(d["alpha"])
@@ -1014,8 +989,8 @@ class EEG:
             two channels used and the value the result of applying the function
             to those channels.           
         """
-#        c1, c2 = self.getChannel(i1), self.getChannel(i2)
-        return self._applyFunctionTo2C(CCC, channels, 
+        f = lambda x,y: np.corrcoef(x,y)[0,1]
+        return self._applyFunctionTo2C(f, channels, 
                                         allPermutations=allPermutations)
     
     def DTW(self, channels=None, allPermutations = False, normalize = False, 

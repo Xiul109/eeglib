@@ -53,7 +53,9 @@ def PFD(data):
     """
     derivative = np.diff(data)
     size=len(data)
-    return np.log(size) / (np.log(size) + np.log(size / (size + 0.4 * countSignChanges(derivative))))
+    signChanges = countSignChanges(derivative)
+    logSize = np.log(size)
+    return logSize / (logSize + np.log(size / (size + 0.4 * signChanges)))
 
 def HFD(data,kMax=None):
     """
@@ -83,7 +85,7 @@ def HFD(data,kMax=None):
     
     
 @njit
-def _HFD(data, N, kMax, L, x):
+def _HFD(data, N, kMax, L, x):# pragma: no cover
     # Loop from 2 to kMax
     for k in range(2, kMax + 1):
         Lk = np.zeros(k)
@@ -137,23 +139,23 @@ def synchronizationLikelihood(c1, c2, m, l, w1, w2, pRef=0.05, epsilonIterations
     c1 = np.array(c1)
     c2 = np.array(c2)
     
-    return __SL(c1, c2, m, l, w1, w2, pRef,epsilonIterations)
+    return _SL(c1, c2, m, l, w1, w2, pRef,epsilonIterations)
 
 # Auxiliar functions for Synchronization Likeihood
 @njit
-def __SL(c1, c2, m, l, w1, w2, pRef, epsilonIterations):
-    X1 = __getEmbeddedVectors(c1, m, l)
-    X2 = __getEmbeddedVectors(c2, m, l)
+def _SL(c1, c2, m, l, w1, w2, pRef, epsilonIterations):# pragma: no cover
+    X1 = _getEmbeddedVectors(c1, m, l)
+    X2 = _getEmbeddedVectors(c2, m, l)
     
-    D1 = __getDistances(X1)
-    D2 = __getDistances(X2)
+    D1 = _getDistances(X1)
+    D2 = _getDistances(X2)
     
     size=len(X1)
     E1 = np.zeros(size) 
     E2 = np.zeros(size)
     for i in range(size):
-        E1[i]=__getEpsilon(D1, i, pRef,epsilonIterations)
-        E2[i]=__getEpsilon(D2, i, pRef,epsilonIterations)
+        E1[i]=_getEpsilon(D1, i, pRef,epsilonIterations)
+        E2[i]=_getEpsilon(D2, i, pRef,epsilonIterations)
     
     SL = 0
     SLMax = 0
@@ -171,7 +173,7 @@ def __SL(c1, c2, m, l, w1, w2, pRef, epsilonIterations):
     return SL / SLMax if SLMax>0 else 0
 
 @njit
-def __getHij(D, i, e):
+def _getHij(D, i, e):# pragma: no cover
     summ = 0
     for j in range(len(D)):
         if D[i,j] < e:
@@ -179,7 +181,7 @@ def __getHij(D, i, e):
     return summ
 
 @njit
-def __getDistances(X):
+def _getDistances(X):# pragma: no cover
     t=len(X)
     D=np.zeros((t,t),dtype=np.float64)
     for i in range(t):
@@ -188,11 +190,11 @@ def __getDistances(X):
 
     return D
 @njit
-def __getProbabilityP(D, i, e):
-    return __getHij(D, i, e) /len(D) 
+def _getProbabilityP(D, i, e):# pragma: no cover
+    return _getHij(D, i, e) /len(D) 
 
 @njit
-def __getEmbeddedVectors(x, m, l):
+def _getEmbeddedVectors(x, m, l):# pragma: no cover
     size = len(x) - (m - 1) * l
     X = np.zeros((m, size))
     for i in range(m):
@@ -201,18 +203,18 @@ def __getEmbeddedVectors(x, m, l):
     return X.T
 
 @njit
-def __logDiference(p1,p2):
+def _logDiference(p1,p2):# pragma: no cover
     return abs(np.log(p2/p1))
 
 @njit
-def __getEpsilon(D, i, pRef, iterations):
+def _getEpsilon(D, i, pRef, iterations):# pragma: no cover
     eInf = 0
     eSup = None
     bestE=e = 1
     bestP=p = 1
     minP = 1 / len(D)
     for _ in range(iterations):
-        p = __getProbabilityP(D, i, e)
+        p = _getProbabilityP(D, i, e)
         if pRef < minP == p:
             break
         elif p < pRef:
@@ -223,7 +225,7 @@ def __getEpsilon(D, i, pRef, iterations):
             bestP=p
             bestE=e
             break
-        if __logDiference(bestP,pRef) > __logDiference(p,pRef):
+        if _logDiference(bestP,pRef) > _logDiference(p,pRef):
             bestP=p
             bestE=e
         e = e * 2 if eSup is None else (eInf + eSup) / 2
@@ -331,17 +333,17 @@ def sampEn(data, m = 2, l = 1, r = None, fr = 0.2, eps = 1e-10):
     if not r:
         r = fr * np.std(data)
     
-    A = __countEmbeddedDistances(data, m+1, l, r) + eps
-    B = __countEmbeddedDistances(data, m  , l, r) + eps
+    A = _countEmbeddedDistances(data, m+1, l, r) + eps
+    B = _countEmbeddedDistances(data, m  , l, r) + eps
     
-    if B == 0:
+    if B == 0:# pragma: no cover
         return -np.inf
-    elif A == 0:
+    elif A == 0:# pragma: no cover
         return np.inf
     return -np.log(A/B)
 
-def __countEmbeddedDistances(data, m, l, r):
-    X = __getEmbeddedVectors(data , m, 1)
+def _countEmbeddedDistances(data, m, l, r):
+    X = _getEmbeddedVectors(data , m, 1)
     
     kdtree = KDTree(X, metric="chebyshev")
     # Return the count
@@ -374,9 +376,9 @@ def LZC(data, threshold = None):
         
     n = len(data)
     
-    sequence = __binarize(data, threshold)
+    sequence = _binarize(data, threshold)
     
-    c = __LZC(sequence)
+    c = _LZC(sequence)
     b = n/np.log2(n)
     
     
@@ -385,7 +387,7 @@ def LZC(data, threshold = None):
     return lzc
 
 @njit
-def __LZC(sequence):
+def _LZC(sequence):# pragma: no cover
     n = len(sequence)
     complexity = 1
     
@@ -399,7 +401,7 @@ def __LZC(sequence):
         # If we are checking the end of the sequence we just need to look at
         # the last element
         if not sqi == q0-1:
-            contained, where = __isSubsequenceContained(sequence[q0:q0+qSize],
+            contained, where = _isSubsequenceContained(sequence[q0:q0+qSize],
                                                     sequence[sqi:q0+qSize-1])
         else:
             contained = sequence[q0+qSize] == sequence[q0+qSize-1]
@@ -419,14 +421,14 @@ def __LZC(sequence):
     return complexity
 
 
-def __binarize(data, threshold):
+def _binarize(data, threshold):
     if type(data) != np.ndarray:
         data = np.array(data)
     
     return np.array(data > threshold, np.uint8)
 
 @njit
-def __isSubsequenceContained(subSequence, sequence):
+def _isSubsequenceContained(subSequence, sequence):# pragma: no cover
     """
     Checks if the subSequence is into the sequence and returns a tuple that
     informs if the subsequence is into and where. Return examples: (True, 7),
@@ -516,33 +518,7 @@ def DFA(data, fit_degree = 1, min_window_size = 4, max_window_size = None,
     
     alpha = np.polyfit(np.log(ns), np.log(F), 1)[0]
     
-    if np.isnan(alpha):
+    if np.isnan(alpha): # pragma: no cover
         return 0
     
     return alpha
-
-# Cross Correlation Coeficient
-def CCC(c1, c2):
-    """
-    Computes the Cross Correlation Coeficient between the data in c1 and the 
-    data in c2.
-    
-    Parameters
-    ----------
-    c1: array_like
-        One of the signals
-    c2: array_like
-        The other signal
-    
-    Returns
-    -------
-    float
-        The Cross Correlation Coeficient.
-    """
-    meanC1 =  np.mean(c1)
-    meanC2 =  np.mean(c2)
-    
-    num = np.mean((c1 - meanC1)*(c2-meanC2))
-    den = np.sqrt(np.var(c1)*np.var(c2))
-    
-    return num/den if num != 0 else 0
