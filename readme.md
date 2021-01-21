@@ -1,11 +1,11 @@
 # eeglib
 
-The module eeglib is a library for python 3.4+ that aims to be a set of tools to analyse EEG signals. It defines some data structures aswell as some processings in order to make easier to work with EEG data.
+The module *eeglib* is a library for Python that provides of tools to analyse electroencephalography (EEG) signals. This library is mainly a feature extraction tool that includes lots of frequently used algorithms in EEG processing with using a sliding window approach. *eeglib* provides a friendly interface that allows data scientists who work with EEG signals to extract lots of features with just a few lines.
 
 ## Main features
 * Different types of processings
     * FFT
-    * Averaged amplitude for each band
+    * Band Power
     * Synchronization Likelihood
     * Petrosian and Higuchi Fractal Dimensions
     * Hjorth Parameters
@@ -13,9 +13,13 @@ The module eeglib is a library for python 3.4+ that aims to be a set of tools to
     * Sample Entropy
     * Lempel-Ziv Complexity
     * Cross Correlation Coeficient
-* Load data from CSV files
-* Works with windows
-* Flexible to use
+* Load data from
+    * CSV files
+    * EDF files
+    * numpy arrays
+* Feature extraction oriented
+* Sliding window oriented
+* Flexible and easy
 
 ## Installation
 
@@ -74,7 +78,7 @@ This will show this:
 
 Now the function has been called 4 times, this is because of the data has a lenght of 1024 samples and the window selected has a size of 256, so the windows contained in the data are 1024/256=4.
 
-## Using iterations
+## Using iterators
 
 Now you may want to move the windows in another ways, like the ones that are shown in the next image:
 ![windows](/Examples/slidingWindow.png)
@@ -146,3 +150,4 @@ There are also some papers related to this library that can be seen bellow:
 ### Not open access
 
 * [eeglib: computational analysis of cognitive performance during the use of video games](https://link.springer.com/article/10.1007%2Fs12652-019-01592-9)
+* [Characterisation of mobile-device tasks by their associated cognitive load through EEG data processing](https://www.sciencedirect.com/science/article/abs/pii/S0167739X20305112)

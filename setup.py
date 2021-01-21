@@ -16,7 +16,6 @@ setup(name='eeglib',
       author='Luis Cabañero Gómez',
       author_email='Luis.Cabanero@uclm.es',
       url="https://github.com/Xiul109/eeglib",
-#      url='',
       py_modules = ['eeglib'],
       license='MIT',
       classifiers=[
@@ -40,6 +39,6 @@ setup(name='eeglib',
                           'pandas',
                           'pyedflib',
                           'fastdtw'],
-      
+
       test_require = ['colorednoise']
 )

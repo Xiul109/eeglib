@@ -18,10 +18,10 @@ def bandPower(spectrum, bandsLimits, freqRes, normalize=False):
             This parameter is used to indicate the bands that are going to be
             used. It is a dict with the name of each band as key and a tuple
             with the lower and upper bounds as value.
-        
+
         freqRes: float
             Minimum resolution for the frequency.
-        
+
         normalize: bool, optional
             If True the each band power is divided by the total power of the
             spectrum. Default False.
@@ -32,7 +32,7 @@ def bandPower(spectrum, bandsLimits, freqRes, normalize=False):
             The keys are the name of each band and the values are their power.
         """
     total = 1
-    if(normalize):
+    if normalize:
         total = sp.integrate.trapz(spectrum, dx=freqRes)
     return {key:sp.integrate.trapz(spectrum[band[0]:band[1]], dx=freqRes)/total
             for key, band in bandsLimits.items()}
@@ -40,12 +40,12 @@ def bandPower(spectrum, bandsLimits, freqRes, normalize=False):
 def PFD(data):
     """
     Returns the Petrosian Fractal Dimension of the signal given in data.
-    
+
     Parameters
     ----------
     data: array_like
         Signal
-    
+
     Returns
     -------
     float
@@ -74,16 +74,16 @@ def HFD(data,kMax=None):
     float
         The resulting value
     """
-    #Inicializations  
+    #Inicializations
     data=np.array(data)
-    N = len(data)  
+    N = len(data)
     kMax = N // 4 if kMax is None else kMax     #Default kMax
     L = np.zeros(kMax-1)
     x = np.array((-np.log(np.arange(2,kMax+1)),np.ones(kMax-1))).transpose()
-    
+
     return _HFD(data, N, kMax, L, x)
-    
-    
+
+
 @njit
 def _HFD(data, N, kMax, L, x):# pragma: no cover
     # Loop from 2 to kMax
@@ -91,7 +91,7 @@ def _HFD(data, N, kMax, L, x):# pragma: no cover
         Lk = np.zeros(k)
         #Loop for compute the lenght of Lmk
         for m in range(0, k):
-            Lmk = 0            
+            Lmk = 0
             for i in range(1, (N - m) // k):
                 Lmk += abs(data[m + i * k] - data[m + i * k - k])
             Lk[m]=Lmk * (N - 1) / (((N - m) // k) * k * k)
@@ -134,11 +134,11 @@ def synchronizationLikelihood(c1, c2, m, l, w1, w2, pRef=0.05, epsilonIterations
         at all and 1 means that they are totally synchronized.
     """
     if len(c1)!=len(c2):
-        raise ValueError("c1 and c2 must have the same lenght")        
-    
+        raise ValueError("c1 and c2 must have the same lenght")
+
     c1 = np.array(c1)
     c2 = np.array(c2)
-    
+
     return _SL(c1, c2, m, l, w1, w2, pRef,epsilonIterations)
 
 # Auxiliar functions for Synchronization Likeihood
@@ -146,17 +146,17 @@ def synchronizationLikelihood(c1, c2, m, l, w1, w2, pRef=0.05, epsilonIterations
 def _SL(c1, c2, m, l, w1, w2, pRef, epsilonIterations):# pragma: no cover
     X1 = _getEmbeddedVectors(c1, m, l)
     X2 = _getEmbeddedVectors(c2, m, l)
-    
+
     D1 = _getDistances(X1)
     D2 = _getDistances(X2)
-    
+
     size=len(X1)
-    E1 = np.zeros(size) 
+    E1 = np.zeros(size)
     E2 = np.zeros(size)
     for i in range(size):
         E1[i]=_getEpsilon(D1, i, pRef,epsilonIterations)
         E2[i]=_getEpsilon(D2, i, pRef,epsilonIterations)
-    
+
     SL = 0
     SLMax = 0
     for i in range(size):
@@ -191,7 +191,7 @@ def _getDistances(X):# pragma: no cover
     return D
 @njit
 def _getProbabilityP(D, i, e):# pragma: no cover
-    return _getHij(D, i, e) /len(D) 
+    return _getHij(D, i, e) /len(D)
 
 @njit
 def _getEmbeddedVectors(x, m, l):# pragma: no cover
@@ -217,7 +217,8 @@ def _getEpsilon(D, i, pRef, iterations):# pragma: no cover
         p = _getProbabilityP(D, i, e)
         if pRef < minP == p:
             break
-        elif p < pRef:
+        
+        if p < pRef:
             eInf = e
         elif p > pRef:
             eSup = e
@@ -225,11 +226,12 @@ def _getEpsilon(D, i, pRef, iterations):# pragma: no cover
             bestP=p
             bestE=e
             break
+        
         if _logDiference(bestP,pRef) > _logDiference(p,pRef):
             bestP=p
             bestE=e
         e = e * 2 if eSup is None else (eInf + eSup) / 2
-        
+
     return bestE
 
 
@@ -307,11 +309,11 @@ def hjorthComplexity(data):
 def sampEn(data, m = 2, l = 1, r = None, fr = 0.2, eps = 1e-10):
     """
     Returns Sample Entropy of the given data.
-    
+
     Parameters
     ----------
     data: array_like
-        The signal  
+        The signal
     m: int, optional
         Size of the embedded vectors. By default 2.
     l: int, optional
@@ -324,27 +326,28 @@ def sampEn(data, m = 2, l = 1, r = None, fr = 0.2, eps = 1e-10):
     eps: float, optional
         Small number added to avoid infinite results. If 0 infinite results can
         appear. Default: 1e-10.
-    
+
     Returns
     -------
     float
-        The resulting value    
+        The resulting value
     """
     if not r:
         r = fr * np.std(data)
-    
+
     A = _countEmbeddedDistances(data, m+1, l, r) + eps
     B = _countEmbeddedDistances(data, m  , l, r) + eps
-    
+
     if B == 0:# pragma: no cover
         return -np.inf
-    elif A == 0:# pragma: no cover
+
+    if A == 0:# pragma: no cover
         return np.inf
     return -np.log(A/B)
 
 def _countEmbeddedDistances(data, m, l, r):
-    X = _getEmbeddedVectors(data , m, 1)
-    
+    X = _getEmbeddedVectors(data , m, l)
+
     kdtree = KDTree(X, metric="chebyshev")
     # Return the count
     return np.sum(kdtree.query_radius(X, r, count_only=True) - 1)
@@ -354,60 +357,59 @@ def _countEmbeddedDistances(data, m, l, r):
 def LZC(data, threshold = None):
     """
     Returns the Lempel-Ziv Complexity (LZ76) of the given data.
-    
+
     Parameters
     ----------
     data: array_like
         The signal.
     theshold: numeric, optional
         A number use to binarize the signal. The values of the signal above
-        threshold will be converted to 1 and the rest to 0. By default, the 
+        threshold will be converted to 1 and the rest to 0. By default, the
         median of the data.
-        
+
     References
     ----------
-    .. [1] M. Aboy, R. Hornero, D. Abasolo and D. Alvarez, "Interpretation of 
-           the Lempel-Ziv Complexity Measure in the Context of Biomedical 
-           Signal Analysis," in IEEE Transactions on Biomedical Engineering, 
+    .. [1] M. Aboy, R. Hornero, D. Abasolo and D. Alvarez, "Interpretation of
+           the Lempel-Ziv Complexity Measure in the Context of Biomedical
+           Signal Analysis," in IEEE Transactions on Biomedical Engineering,
            vol. 53, no.11, pp. 2282-2288, Nov. 2006.
     """
     if not threshold:
         threshold=np.median(data)
-        
+
     n = len(data)
-    
+
     sequence = _binarize(data, threshold)
-    
+
     c = _LZC(sequence)
     b = n/np.log2(n)
-    
-    
+
     lzc = c/b
-    
+
     return lzc
 
 @njit
 def _LZC(sequence):# pragma: no cover
     n = len(sequence)
     complexity = 1
-    
+
     q0    = 1
     qSize = 1
-    
+
     sqi   = 0
     where = 0
-    
-    while(q0 + qSize <= n):
+
+    while q0 + qSize <= n:
         # If we are checking the end of the sequence we just need to look at
         # the last element
-        if not sqi == q0-1:
+        if sqi != q0-1:
             contained, where = _isSubsequenceContained(sequence[q0:q0+qSize],
                                                     sequence[sqi:q0+qSize-1])
         else:
             contained = sequence[q0+qSize] == sequence[q0+qSize-1]
-        
+
          #If Q is contained in sq~, we increase the size of q
-        if(contained):
+        if contained:
             qSize+=1
             sqi = where
         #If Q is not contained the complexity is increased by 1 and reset Q
@@ -416,15 +418,14 @@ def _LZC(sequence):# pragma: no cover
             qSize=1
             complexity+=1
             sqi=0
-    
-    
+
     return complexity
 
 
 def _binarize(data, threshold):
-    if type(data) != np.ndarray:
+    if  not isinstance(data, np.ndarray):
         data = np.array(data)
-    
+
     return np.array(data > threshold, np.uint8)
 
 @njit
@@ -436,18 +437,17 @@ def _isSubsequenceContained(subSequence, sequence):# pragma: no cover
     """
     n = len(sequence)
     m = len(subSequence)
-    
+
     for i in range(n-m+1):
         equal = True
         for j in range(m):
             equal = subSequence[j] == sequence[i+j]
             if not equal:
                 break
-        
+
         if equal:
             return True, i
-        
-    
+
     return False, -1
 
 
@@ -456,7 +456,7 @@ def DFA(data, fit_degree = 1, min_window_size = 4, max_window_size = None,
         fskip = 1, max_n_windows_sizes=None):
     """
     Applies Detrended Fluctuation Analysis algorithm to the given data.
-    
+
     Parameters
     ----------
     data: array_like
@@ -474,7 +474,7 @@ def DFA(data, fit_degree = 1, min_window_size = 4, max_window_size = None,
         Maximum number of window sizes that will be used. The final number can
         be smaller once the repeated values are removed
         Default: log2(size)
-    
+
     Returns
     -------
     float
@@ -482,43 +482,43 @@ def DFA(data, fit_degree = 1, min_window_size = 4, max_window_size = None,
     """
     #Arguments handling
     data = np.array(data)
-    
+
     size=len(data)
-    
+
     if not max_window_size:
         max_window_size = size//4
-    
-    #Detrended data    
+
+    #Detrended data
     Y = np.cumsum(data - np.mean(data))
-    
+
     #Windows sizes
     if not max_n_windows_sizes:
         max_n_windows_sizes = int(np.round(np.log2(size)))
-        
+
     ns = np.unique(
           np.geomspace(min_window_size, max_window_size, max_n_windows_sizes,
                        dtype=int))
-    
+
     #Fluctuations for each window size
     F = np.zeros(ns.size)
-    
+
     #Loop for each window size
     for indexF,n in enumerate(ns):
         itskip = max(int(fskip * n),1)
         nWindows = int(np.ceil((size - n + 1) / itskip))
-        
+
         #Aux x
         x = np.arange(n)
-        
+
         y  = np.array([Y[i*itskip:i*itskip+n] for i in range(0,nWindows)])
         c  = np.polynomial.polynomial.polyfit(x, y.T, fit_degree)
         yn = np.polynomial.polynomial.polyval(x, c)
-            
+
         F[indexF] = np.mean(np.sqrt(np.sum((y-yn)**2, axis=1)/n))
-    
+
     alpha = np.polyfit(np.log(ns), np.log(F), 1)[0]
-    
+
     if np.isnan(alpha): # pragma: no cover
         return 0
-    
+
     return alpha
