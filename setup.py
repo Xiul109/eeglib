@@ -40,5 +40,9 @@ setup(name='eeglib',
                           'pyedflib',
                           'fastdtw'],
 
-      test_require = ['colorednoise']
+      test_require = ['colorednoise'],
+      
+      extras_require = {
+          'doc': ["sphinx", "numpydoc"]
+          }
 )

@@ -33,6 +33,9 @@ Installation using pip:
 * numba
 * scipy
 * sklearn
+* pandas
+* pyedflib
+* fastdtw
 
 # Getting started
 

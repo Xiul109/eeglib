@@ -15,6 +15,7 @@ This reference manual contains the documentation about the modules, classes and 
    
    eeg
    helpers
+   wrapper
    features
    preprocessing
    
