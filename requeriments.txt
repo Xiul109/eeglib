@@ -6,5 +6,3 @@ pandas
 pyedflib
 fastdtw
 colorednoise
-sphinx
-numpydoc 
