@@ -1,0 +1,10 @@
+numpy
+scipy
+sklearn
+numba
+pandas
+pyedflib
+fastdtw
+colorednoise
+sphinx
+numpydoc 
