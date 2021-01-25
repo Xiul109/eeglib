@@ -1,2 +1,11 @@
 sphinx
 numpydoc 
+
+numpy
+scipy
+sklearn
+numba
+pandas
+pyedflib
+fastdtw
+colorednoise
