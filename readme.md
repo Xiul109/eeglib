@@ -1,6 +1,6 @@
 # eeglib
 
-The module *eeglib* is a library for Python that provides of tools to analyse electroencephalography (EEG) signals. This library is mainly a feature extraction tool that includes lots of frequently used algorithms in EEG processing with using a sliding window approach. *eeglib* provides a friendly interface that allows data scientists who work with EEG signals to extract lots of features with just a few lines.
+The module *eeglib* is a library for Python that provides tools to analyse electroencephalography (EEG) signals. This library is mainly a feature extraction tool that includes lots of frequently used algorithms in EEG processing with using a sliding window approach. *eeglib* provides a friendly interface that allows data scientists who work with EEG signals to extract lots of features with just a few lines.
 
 ## Main features
 * Different types of processings
@@ -38,6 +38,8 @@ Installation using pip:
 * fastdtw
 
 # Getting started
+
+Bellow there is a Quickstart Guide to eeglib. If you are interested in the API, you can find it [here](https://eeglib.readthedocs.io/en/latest/index.html).
 
 ## Basic example
 
