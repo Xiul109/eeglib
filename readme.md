@@ -133,6 +133,12 @@ So, the scheme to follow with wrappers is the next:
 3. Select the desired features to compute. They can be parameterized by adding the parameters just behind the name.
 4. Call the method "getAllFeatures()" in order to compute every feature from every window at once or iterate over the Wrapper object for obtaining the features of each window. They are returned as a pandas.DataFrame or a pandas.Series.
 
+# Citing
+If eeglib has been useful in your research, please, consider citing the next article.
+
+[eeglib: computational analysis of cognitive performance during the use of video games](https://link.springer.com/article/10.1007%2Fs12652-019-01592-9)
+
+
 # Documents related
 This library was initialy a Final Degree Project and you can find the documentation of the development in the next link:
 
@@ -143,7 +149,7 @@ Later it was extented as part of a Master's thesis that can be found in the next
 [Master's thesis (Spanish)](https://ruidera.uclm.es/xmlui/handle/10578/19062)
 
 
-## Papers
+## Scientific papers
 
 There are also some papers related to this library that can be seen bellow:
 
@@ -154,5 +160,5 @@ There are also some papers related to this library that can be seen bellow:
 
 ### Not open access
 
-* [eeglib: computational analysis of cognitive performance during the use of video games](https://link.springer.com/article/10.1007%2Fs12652-019-01592-9)
 * [Characterisation of mobile-device tasks by their associated cognitive load through EEG data processing](https://www.sciencedirect.com/science/article/abs/pii/S0167739X20305112)
+* [eeglib: computational analysis of cognitive performance during the use of video games](https://link.springer.com/article/10.1007%2Fs12652-019-01592-9)
