@@ -136,7 +136,7 @@ So, the scheme to follow with wrappers is the next:
 # Citing
 If eeglib has been useful in your research, please, consider citing the next article.
 
-[eeglib: computational analysis of cognitive performance during the use of video games](https://link.springer.com/article/10.1007%2Fs12652-019-01592-9)
+[eeglib: A Python module for EEG feature extraction](https://www.sciencedirect.com/science/article/pii/S2352711021000753)
 
 
 # Documents related
@@ -157,8 +157,10 @@ There are also some papers related to this library that can be seen bellow:
 
 * [Computational EEG Analysis Techniques When Playing Video Games: A Systematic Review](https://www.mdpi.com/2504-3900/2/19/483)
 * [Analysis of Cognitive Load Using EEG when Interacting with Mobile Devices](https://www.mdpi.com/2504-3900/31/1/70)
+* [eeglib: A Python module for EEG feature extraction](https://www.sciencedirect.com/science/article/pii/S2352711021000753)
 
 ### Not open access
 
 * [Characterisation of mobile-device tasks by their associated cognitive load through EEG data processing](https://www.sciencedirect.com/science/article/abs/pii/S0167739X20305112)
 * [eeglib: computational analysis of cognitive performance during the use of video games](https://link.springer.com/article/10.1007%2Fs12652-019-01592-9)
+* [Studying the generalisability of cognitive load measured 7with EEG](https://www.sciencedirect.com/science/article/pii/S1746809421006297)
