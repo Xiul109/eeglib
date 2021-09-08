@@ -9,3 +9,4 @@ pandas
 pyedflib
 fastdtw
 colorednoise
+progressbar2
