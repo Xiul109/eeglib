@@ -146,7 +146,7 @@ class SampleWindow:
             raise ValueError("There aren't names asociated to the channels.")
 
         if isinstance(i, list):
-            selectedChannels=np.zeros((len(i),self.windowSize),dtype=np.float)
+            selectedChannels=np.zeros((len(i),self.windowSize),dtype=float)
             for c, e in enumerate(i):
                 if type(e) in [int, str]:
                     selectedChannels[c]=self.getChannel(e)

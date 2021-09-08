@@ -1,4 +1,5 @@
 import unittest
+import os
 
 import numpy as np
 
@@ -8,9 +9,9 @@ import datetime
 
 
 class TestHelpers(unittest.TestCase):
-    test_file_name = "fake_EEG_signal.csv"
-    test_file_edf = "fake_EEG_signal.edf"
-    test_file_noname = "fake_EEG_signal_no_names.csv"
+    test_file_name = os.path.join(os.path.dirname(__file__), "fake_EEG_signal.csv")
+    test_file_edf = os.path.join(os.path.dirname(__file__), "fake_EEG_signal.edf")
+    test_file_noname = os.path.join(os.path.dirname(__file__),"fake_EEG_signal_no_names.csv")
     test_data = np.random.random((3,1024))
     
     def test_channels_names(self):

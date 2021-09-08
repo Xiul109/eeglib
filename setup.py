@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 with open("readme.md", "r") as fh:
     long_description = fh.read()
 
-__version__ = "0.4"
+__version__ = "0.4.1"
 
 setup(name='eeglib',
       version = __version__,
@@ -38,7 +38,8 @@ setup(name='eeglib',
                           'numba',
                           'pandas',
                           'pyedflib',
-                          'fastdtw'],
+                          'fastdtw',
+                          'progressbar2'],
 
       test_require = ['colorednoise'],
       
