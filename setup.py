@@ -34,7 +34,7 @@ setup(name='eeglib',
       packages=find_packages(exclude=["docs"]),
 
       install_requires = ['numpy','scipy',
-                          'sklearn',
+                          'scikit-learn',
                           'numba',
                           'pandas',
                           'pyedflib',
