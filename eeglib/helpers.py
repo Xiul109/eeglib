@@ -32,10 +32,10 @@ class Helper():
             The signals data in the shape (nChannels, nSamples).
         sampleRate: numeric, optional
             The frequency at which the data was recorded. By default its value
-            is the lenght of the data.
+            is the length of the data.
         windowSize: int, optional
             The size of the window in which the calculations will be done. By
-            default its value is the lenght of one second of the data.
+            default its value is the length of one second of the data.
         names: list of strings
             A list containing the names of each channel in the same positions
             than data channels.
@@ -51,7 +51,7 @@ class Helper():
             . It is applied always after normalization if normalize = True.
             Default: False.
         selectedSignals: list of strings or ints
-            If the data file has names asociated to each columns, those columns
+            If the data file has names associated to each columns, those columns
             can be selected through the name or the index of the column. If the
             data file hasn't names in the columns, they can be selected just by
             the index.
@@ -81,7 +81,7 @@ class Helper():
         else:
             self.windowSize = windowSize
 
-        #Attributes inicialization
+        #Attributes initialization
         self.nChannels = len(self.data)
         self.nSamples = len(self.data[0])
         self.startPoint = 0
@@ -105,7 +105,7 @@ class Helper():
             self.data=ica.fit_transform(self.data.transpose()).transpose()
             self.names = [str(i) for i in range(self.nChannels)]
 
-        #normilze check
+        #normalize check
         if normalize:
             self.data=zscore(self.data,axis=1)
 
@@ -120,8 +120,7 @@ class Helper():
 
     def __getitem__(self, i):
         """
-        Creates and return a ready iterator thet using the slice given as
-        parameter.
+        Creates and return a ready iterator using the slice given as parameter.
 
         Parameters
         ----------
@@ -314,20 +313,25 @@ class Iterator():
 
 class CSVHelper(Helper):
     """
-    This class is for applying diferents operations using the EEG class over a
-    csv file.
+    This class is for applying different operations using the EEG class over a
+    CSV file.
     """
-    def __init__(self, path, *args, **kargs):
+    def __init__(self, path, *args, csv_format = {}, **kargs):
         """
         The rest of parameters can be seen at :meth:`Helper.__init__`
 
         Parameters
         ----------
         path: str
-            The path to the csv file
+            The path to the CSV file
+        csv_format: dict
+            It is used to define a set of parameters specific to a particular CSV
+            dialect. It must be a dict containing as keys and values the
+            parameters specified 
+            `here <https://docs.python.org/3/library/csv.html#csv-fmt-params>`_.
         """
         with open(path) as file:
-            reader=csv.reader(file)
+            reader=csv.reader(file, **csv_format)
             l1=reader.__next__()
             data=[[] for _ in l1]
             for row in reader:
@@ -352,8 +356,8 @@ class CSVHelper(Helper):
 
 class EDFHelper(Helper):
     """
-    This class is for applying diferents operations using the EEG class over an
-    edf file.
+    This class is for applying different operations using the EEG class over an
+    EDF file.
     """
     def __init__(self, path, *args, sampleRate=None, **kargs):
         """
@@ -362,7 +366,7 @@ class EDFHelper(Helper):
         Parameters
         ----------
         path: str
-            The path to the edf file
+            The path to the EDF file
         """
         reader = EdfReader(path)
 
