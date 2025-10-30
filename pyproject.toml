@@ -1,0 +1,43 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "eeglib"
+version = "0.4.1.2"
+description = "A library for EEG signal feature extraction."
+readme = {file = "readme.md", content-type = "text/markdown"}
+authors = [
+        {name = "Luis Cabañero Gómez", email = "Luis.Cabanero@uclm.es"}
+]
+license = "MIT"
+license-files= ["LICENSE.txt"]
+keywords = ["EEG", "feature extraction", "signal processing", "library"]
+classifiers = [
+          "Development Status :: 4 - Beta",
+
+          "Intended Audience :: Developers",
+          "Intended Audience :: Science/Research",
+
+          "Programming Language :: Python :: 3.6",
+          "Topic :: Scientific/Engineering",
+      ]
+requires-python = ">= 3.6"
+dependencies = [
+             "numpy",
+    "scipy",
+    "scikit-learn",
+    "numba",
+    "pandas",
+    "pyedflib",
+    "fastdtw",
+    "progressbar2"
+]
+
+[project.optional-dependencies]
+test = ["colorednoise"]
+docs = ["sphinx", "numpydoc"]
+
+[project.urls]
+Repository = "https://github.com/Xiul109/eeglib"
+Documentation = "https://eeglib.readthedocs.io/en/latest/index.html"
