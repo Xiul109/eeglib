@@ -33,8 +33,8 @@ def bandPower(spectrum, bandsLimits, freqRes, normalize=False):
         """
     total = 1
     if normalize:
-        total = sp.integrate.trapz(spectrum, dx=freqRes)
-    return {key:sp.integrate.trapz(spectrum[band[0]:band[1]], dx=freqRes)/total
+        total = sp.integrate.trapezoid(spectrum, dx=freqRes)
+    return {key:sp.integrate.trapezoid(spectrum[band[0]:band[1]], dx=freqRes)/total
             for key, band in bandsLimits.items()}
 
 def PFD(data):
