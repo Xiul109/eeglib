@@ -77,7 +77,7 @@ class Helper():
 
         #windowSize check
         if not windowSize:
-            self.windowSize = self.sampleRate
+            self.windowSize = int(self.sampleRate)
         else:
             self.windowSize = windowSize
 
