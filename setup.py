@@ -6,7 +6,7 @@ from setuptools import setup, find_packages
 with open("readme.md", "r") as fh:
     long_description = fh.read()
 
-__version__ = "0.4.1.1"
+__version__ = "0.4.1.2"
 
 setup(name='eeglib',
       version = __version__,
